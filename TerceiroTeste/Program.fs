@@ -14,11 +14,12 @@ type PEGParser () =
         member this.number = oneOf "0123456789" --> fun a -> int(a) - int('0')
         member this.negNumber = ~~"-" + this.number --> fun a -> -snd(a)
        
-        //math ruless
+        //math expressions:
         member this.addRule = (this.number |- this.negNumber) + ~~"+" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) + b
         member this.subRule = (this.number |- this.negNumber) + ~~"-" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) - b
         member this.divRule = (this.number |- this.negNumber) + ~~"/" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) / b
         member this.mulRule = (this.number |- this.negNumber) + ~~"*" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) * b
+        member this.mathRule = (this.addRule |- this.subRule) |- (this.mulRule |- this.divRule)
 
         //boolean expressions:
         member this.eqRule = (this.number |- this.negNumber) + ~~"==" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) = b
@@ -29,8 +30,10 @@ type PEGParser () =
         member this.geqRule = (this.number |- this.negNumber) + ~~">=" + (this.number |- this.negNumber)
         member this.orRule = (this.number |- this.negNumber) + ~~"or" + (this.number |- this.negNumber)
         member this.andRule = (this.number |- this.negNumber) + ~~"and" + (this.number |- this.negNumber)
-       
+        member this.boolRule = (this.eqRule |- this.negRule) |- (this.lebRule |- this.leqRule) |- (this.gebRule |- this.geqRule) |- (this.andRule |- this.orRule)
 
+        //general expressions:
+        member this.expRule = (this.mathRule |- this.boolRule)   
        //commands:
        //member this.assignRule =   não sei definir uma regra que parseie 1 letra seguida de 0 ou mais letras e números pq não consigo achar uma função que puxe várias coisas ao mesmo tempo.
    
