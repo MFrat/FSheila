@@ -29,7 +29,7 @@ type PEGParser () =
 
 [<EntryPoint>]
 let main argv = 
-    if 3 = 3 then printfn "a"
+    //if 3 = 3 then printfn "a"
     let testGrammar = new PEGParser()
     let teste = parse testGrammar.eqRule "3==2"
     printfn "%A" teste
