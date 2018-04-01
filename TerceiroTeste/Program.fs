@@ -10,26 +10,32 @@ open System
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
-        
-        member this.number = oneOf "0123456789" --> fun a -> int(a) - int('0')
-        member this.negNumber = ~~"-" + this.number --> fun a -> -snd(a)
+
+        //basic shit:  
+        member this.posNumber = oneOf "0123456789" --> fun a -> int(a) - int('0')
+        member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
+        member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> str(a)
+        member this.uLetter = oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" --> fun a -> str(a)
+        member this.number = this.posNumber |- this.negNumber
+        member this.letter = this.lLetter |- this.uLetter
+        member this.identifier = this.lLetter |- (this.lLetter + this.letter)
        
         //math expressions:
-        member this.addRule = (this.number |- this.negNumber) + ~~"+" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) + b
-        member this.subRule = (this.number |- this.negNumber) + ~~"-" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) - b
-        member this.divRule = (this.number |- this.negNumber) + ~~"/" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) / b
-        member this.mulRule = (this.number |- this.negNumber) + ~~"*" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) * b
+        member this.addRule = this.number + ~~"+" + this.number --> fun (a,b) -> fst(a) + b
+        member this.subRule = this.number + ~~"-" + this.number --> fun (a,b) -> fst(a) - b
+        member this.divRule = this.number + ~~"/" + this.number --> fun (a,b) -> fst(a) / b
+        member this.mulRule = this.number + ~~"*" + this.number --> fun (a,b) -> fst(a) * b
         member this.mathRule = (this.addRule |- this.subRule) |- (this.mulRule |- this.divRule)
 
         //boolean expressions:
-        member this.eqRule = (this.number |- this.negNumber) + ~~"==" + (this.number |- this.negNumber) --> fun (a,b) -> fst(a) = b
-        member this.negRule = ~~"~" + (this.number |- this.negNumber)
-        member this.lebRule = (this.number |- this.negNumber) + ~~"<" + (this.number |- this.negNumber)
-        member this.leqRule = (this.number |- this.negNumber) + ~~"<=" + (this.number |- this.negNumber)
-        member this.gebRule = (this.number |- this.negNumber) + ~~">" + (this.number |- this.negNumber)
-        member this.geqRule = (this.number |- this.negNumber) + ~~">=" + (this.number |- this.negNumber)
-        member this.orRule = (this.number |- this.negNumber) + ~~"or" + (this.number |- this.negNumber)
-        member this.andRule = (this.number |- this.negNumber) + ~~"and" + (this.number |- this.negNumber)
+        member this.eqRule = this.number + ~~"==" + this.number --> fun (a,b) -> fst(a) = b
+        member this.negRule = ~~"~" + this.number
+        member this.lebRule = this.number + ~~"<" + this.number
+        member this.leqRule = this.number + ~~"<=" + this.number
+        member this.gebRule = this.number + ~~">" + this.number
+        member this.geqRule = this.number + ~~">=" + this.number
+        member this.orRule = this.number + ~~"or" + this.number
+        member this.andRule = this.number + ~~"and" + this.number
         member this.boolRule = (this.eqRule |- this.negRule) |- (this.lebRule |- this.leqRule) |- (this.gebRule |- this.geqRule) |- (this.andRule |- this.orRule)
 
         //general expressions:
