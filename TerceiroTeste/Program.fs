@@ -16,9 +16,11 @@ type PEGParser () =
         member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
         member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> a
         member this.uLetter = oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" --> fun a -> a
+        member this.digit = oneOf "0123456789"
         member this.number = this.posNumber |- this.negNumber
         member this.letter = this.lLetter |- this.uLetter
-        member this.identifier = this.lLetter |- (this.lLetter |- this.letter) //rever isso aqui.
+        member this.identifierRule =  (this.digit |- this.letter).oneOrMore
+
        
         //math expressions:
         member this.addRule = this.number + ~~"+" + this.number //--> fun (a,b) -> fst(a) + b
@@ -42,7 +44,9 @@ type PEGParser () =
         //general expressions:
         member this.expRule = (this.mathRule |- this.boolRule)  
         //o retorno de ambos os parsings são iguais. até aqui as regras não possuem semântica, então está ok.
-       //commands:
+        //commands:
+        member this.varRule = ~~"var" + this.identifier
+        member this.consRul = ~~"cons" + this.identifier
        //member this.assignRule =   não sei definir uma regra que parseie 1 letra seguida de 0 ou mais letras e números pq não consigo achar uma função que puxe várias coisas ao mesmo tempo.
    
 
@@ -50,7 +54,7 @@ type PEGParser () =
 let main argv = 
     //if 3 = 3 then printfn "a"
     let testGrammar = new PEGParser()
-    let teste = parse testGrammar.boolRule "3<4"
+    let teste = parse testGrammar.identifierRule "vaitomarnocu102120190F"
     printfn "%A" teste
     let sheila = Console.ReadLine()
     printfn "%A" sheila
