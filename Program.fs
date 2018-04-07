@@ -46,11 +46,11 @@ type PEGParser () =
 
         //operators:
         
-        member this.addOp = this.whitespace.opt + ~~"+" + this.whitespace.opt
-        member this.subOp = this.whitespace.opt + ~~"-" + this.whitespace.opt
-        member this.mulOp = this.whitespace.opt + ~~"*" + this.whitespace.opt
-        member this.divOp = this.whitespace.opt + ~~"/" + this.whitespace.opt
-        member this.choOp = this.whitespace.opt + ~~"|" + this.whitespace.opt
+        //member this.addOp = this.whitespace.opt + ~~"+" + this.whitespace.opt
+        //member this.subOp = this.whitespace.opt + ~~"-" + this.whitespace.opt
+        //member this.mulOp = this.whitespace.opt + ~~"*" + this.whitespace.opt
+        //member this.divOp = this.whitespace.opt + ~~"/" + this.whitespace.opt
+        //member this.choOp = this.whitespace.opt + ~~"|" + this.whitespace.opt
         //provável que as operações seja definidas conforme abaixo
         //por enquanto sem poder usar espaço entre os valores:
         member this.calcOp = 
@@ -77,7 +77,18 @@ type PEGParser () =
                     |- number
 
                 additive
-        //boolOp is under construction (nao testa que tá bugado)
+
+
+        //como encaixar isso aqui embaixo na ideia introduzida acima é cena pro próximo capítulo.
+        //member this.negOp = this.whitespace.oneOrMore.opt + ~~"~"
+        member this.eqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) 
+        member this.lebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
+        member this.leqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
+        member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
+        member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
+        //member this.orOp = this.whitespace.oneOrMore.opt + ~~"or" + this.whitespace.oneOrMore.opt
+        //member this.andOp = this.whitespace.oneOrMore.opt + ~~"and" + this.whitespace.oneOrMore.opt
+
         member this.boolOp =
              let andOp = production "andOp"
              let orOp = production "orOp"
@@ -102,44 +113,33 @@ type PEGParser () =
                 
              andOp
 
-
-        //como encaixar isso aqui embaixo na ideia introduzida acima é cena pro próximo capítulo.
-        member this.negOp = this.whitespace.opt + ~~"~"
-        member this.eqOp = this.whitespace.opt + ~~"==" + this.whitespace.opt
-        member this.lebOp = this.whitespace.opt + ~~"<" + this.whitespace.opt
-        member this.leqOp = this.whitespace.opt + ~~"<=" + this.whitespace.opt
-        member this.gebOp = this.whitespace.opt + ~~">" + this.whitespace.opt
-        member this.geqOp = this.whitespace.opt + ~~">=" + this.whitespace.opt
-        member this.orOp = this.whitespace.opt + ~~"or" + this.whitespace.opt
-        member this.andOp = this.whitespace.opt + ~~"and" + this.whitespace.opt
-
-        member this.assignOp = this.whitespace.opt + ~~":=" + this.whitespace.opt
+        member this.assignOp = this.whitespace.oneOrMore.opt + ~~":=" + this.whitespace.oneOrMore.opt
         member this.varOp = ~~"var" + this.whitespace
         member this.consOp = ~~"cons" + this.whitespace
         member this.initOp = ~~"init" + this.whitespace
-        member this.iniOp = this.whitespace.opt + ~~"=" + this.whitespace.opt
+        member this.iniOp = this.whitespace.oneOrMore.opt + ~~"=" + this.whitespace.oneOrMore.opt
 
         //arithmetic expressions:
 
         //REVER TODOS, TÁ TUDO ERRADO
-        member this.addRule = this.number + this.addOp + this.number //--> fun (a,b) -> fst(a) + b
-        member this.subRule = this.number + this.subOp + this.number //--> fun (a,b) -> fst(a) - b
-        member this.mulRule = this.number + this.mulOp + this.number //--> fun (a,b) -> fst(a) * b
-        member this.divRule = this.number + this.divOp + this.number //--> fun (a,b) -> fst(a) / b
-        member this.mathRule = this.addRule |- this.subRule |- this.mulRule |- this.divRule
+       //member this.addRule = this.number + this.addOp + this.number //--> fun (a,b) -> fst(a) + b
+       //member this.subRule = this.number + this.subOp + this.number //--> fun (a,b) -> fst(a) - b
+       //member this.mulRule = this.number + this.mulOp + this.number //--> fun (a,b) -> fst(a) * b
+        //member this.divRule = this.number + this.divOp + this.number //--> fun (a,b) -> fst(a) / b
+        //member this.mathRule = this.addRule |- this.subRule |- this.mulRule |- this.divRule
 
         //boolean expressions:
 
         //REVER TODOS, TÁ TUDO ERRADO
-        member this.eqRule = this.booleanType + this.eqOp + this.booleanType //--> fun (a,b) -> fst(a) = b
-        member this.lebRule = this.booleanType + this.lebOp + this.booleanType
-        member this.leqRule = this.booleanType + this.leqOp + this.booleanType
-        member this.gebRule = this.booleanType + this.gebOp + this.booleanType
-        member this.geqRule = this.booleanType + this.geqOp + this.booleanType
-        member this.orRule = this.booleanType + this.orOp + this.booleanType
-        member this.andRule = this.booleanType + this.andOp + this.booleanType
-        member this.boolRule = this.eqRule |- this.lebRule |- this.leqRule |- this.gebRule |- this.geqRule |- this.orRule |- this.andRule
-        member this.negRule = this.negOp + this.boolRule  //DUVIDA AQUI TEM QUE REVER NEG: o tipo de negRUle é diferente das demais por ter uma aridade diferente.
+        //member this.eqRule = this.booleanType + this.eqOp + this.booleanType //--> fun (a,b) -> fst(a) = b
+        //member this.lebRule = this.booleanType + this.lebOp + this.booleanType
+        //member this.leqRule = this.booleanType + this.leqOp + this.booleanType
+        //member this.gebRule = this.booleanType + this.gebOp + this.booleanType
+        //member this.geqRule = this.booleanType + this.geqOp + this.booleanType
+        //member this.orRule = this.booleanType + this.orOp + this.booleanType
+        //member this.andRule = this.booleanType + this.andOp + this.booleanType
+        //member this.boolRule = this.eqRule |- this.lebRule |- this.leqRule |- this.gebRule |- this.geqRule |- this.orRule |- this.andRule
+        //member this.negRule = this.negOp + this.boolRule  //DUVIDA AQUI TEM QUE REVER NEG: o tipo de negRUle é diferente das demais por ter uma aridade diferente.
 
         //general expressions:
         //trocando o number por booleantype em regras booleanas, a regra abaixo passa a não valer:
