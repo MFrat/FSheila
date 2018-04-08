@@ -3,7 +3,6 @@
 module teste.teste
 
 open ScanRat
-open ScanRatCombinators
 open System
 
 type Exp =  
@@ -17,6 +16,12 @@ type boolExp =
             | And of boolExp * boolExp
             | Or of boolExp * boolExp
             | Neg of boolExp
+            | Eq of int * int 
+            | Leb of int * int
+            | Leq of int * int
+            | Geb of int * int
+            | Geq of int * int
+            | Neq of int * int
             | Boolean of bool
 
 
@@ -51,7 +56,7 @@ type PEGParser () =
         //member this.mulOp = this.whitespace.opt + ~~"*" + this.whitespace.opt
         //member this.divOp = this.whitespace.opt + ~~"/" + this.whitespace.opt
         //member this.choOp = this.whitespace.opt + ~~"|" + this.whitespace.opt
-        //provável que as operações seja definidas conforme abaixo
+        // as operações serão definidas conforme abaixo
         //por enquanto sem poder usar espaço entre os valores:
         member this.calcOp = 
                 let multiplicative = production "multiplicative"
@@ -78,14 +83,14 @@ type PEGParser () =
 
                 additive
 
-
-        //como encaixar isso aqui embaixo na ideia introduzida acima é cena pro próximo capítulo.
-        //member this.negOp = this.whitespace.oneOrMore.opt + ~~"~"
-        member this.eqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) 
-        member this.lebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
-        member this.leqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
-        member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
-        member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt)
+        //como encaixar isso aqui embaixo na ideia introduzida acima é cena pro próximo capítulo. FEITO
+        //parei aqui
+        member this.eqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun (a,b) -> Eq (fst(a),b)
+        member this.lebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leb (fst(a),b)
+        member this.leqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leq (fst(a),b)
+        member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
+        member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
+        member this.neqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
         //member this.orOp = this.whitespace.oneOrMore.opt + ~~"or" + this.whitespace.oneOrMore.opt
         //member this.andOp = this.whitespace.oneOrMore.opt + ~~"and" + this.whitespace.oneOrMore.opt
 
@@ -103,12 +108,24 @@ type PEGParser () =
                  <- ourAnd
                  |- ourOr
                  |- ourNeg
+                 |- this.eqOp
+                 |- this.lebOp
+                 |- this.leqOp
+                 |- this.gebOp
+                 |- this.geqOp
+                 |- this.neqOp
                  |- boolean
 
              orOp.rule
                  <- ourAnd
                  |- ourOr
                  |- ourNeg
+                 |- this.eqOp
+                 |- this.lebOp
+                 |- this.leqOp
+                 |- this.gebOp
+                 |- this.geqOp
+                 |- this.neqOp
                  |- boolean
                 
              andOp
@@ -119,33 +136,7 @@ type PEGParser () =
         member this.initOp = ~~"init" + this.whitespace
         member this.iniOp = this.whitespace.oneOrMore.opt + ~~"=" + this.whitespace.oneOrMore.opt
 
-        //arithmetic expressions:
 
-        //REVER TODOS, TÁ TUDO ERRADO
-       //member this.addRule = this.number + this.addOp + this.number //--> fun (a,b) -> fst(a) + b
-       //member this.subRule = this.number + this.subOp + this.number //--> fun (a,b) -> fst(a) - b
-       //member this.mulRule = this.number + this.mulOp + this.number //--> fun (a,b) -> fst(a) * b
-        //member this.divRule = this.number + this.divOp + this.number //--> fun (a,b) -> fst(a) / b
-        //member this.mathRule = this.addRule |- this.subRule |- this.mulRule |- this.divRule
-
-        //boolean expressions:
-
-        //REVER TODOS, TÁ TUDO ERRADO
-        //member this.eqRule = this.booleanType + this.eqOp + this.booleanType //--> fun (a,b) -> fst(a) = b
-        //member this.lebRule = this.booleanType + this.lebOp + this.booleanType
-        //member this.leqRule = this.booleanType + this.leqOp + this.booleanType
-        //member this.gebRule = this.booleanType + this.gebOp + this.booleanType
-        //member this.geqRule = this.booleanType + this.geqOp + this.booleanType
-        //member this.orRule = this.booleanType + this.orOp + this.booleanType
-        //member this.andRule = this.booleanType + this.andOp + this.booleanType
-        //member this.boolRule = this.eqRule |- this.lebRule |- this.leqRule |- this.gebRule |- this.geqRule |- this.orRule |- this.andRule
-        //member this.negRule = this.negOp + this.boolRule  //DUVIDA AQUI TEM QUE REVER NEG: o tipo de negRUle é diferente das demais por ter uma aridade diferente.
-
-        //general expressions:
-        //trocando o number por booleantype em regras booleanas, a regra abaixo passa a não valer:
-        //member this.expRule = (this.mathRule |- this.boolRule)
-
-       
         //commands:
 
         //member this.assignRule = this.id + this.assignOp + this.expRule
@@ -158,8 +149,10 @@ type PEGParser () =
 [<EntryPoint>]
 let main argv = 
     let testGrammar = new PEGParser()
-    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
+    //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
+    //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
     //let teste2 = parse testGrammar.boolOp "true and false or false and true"
+    let teste = parse testGrammar.boolOp "3<=4 and 4<>5 or true and false and 666  <= 4 or 1981> 2007"
     //printfn "%A" teste2
     printfn "%A" teste
     let sheila = Console.ReadLine()
