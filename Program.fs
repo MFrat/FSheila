@@ -28,7 +28,7 @@ type PEGParser () =
         member this.whitespace = (~~" ").oneOrMore
         member this.breakline = (~~"\n").oneOrMore
 
-        member this.posNumber = oneOf "0123456789" --> fun a -> int(a) - int('0')
+        member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
         member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
 
         member this.digit = oneOf "0123456789"
@@ -157,9 +157,8 @@ type PEGParser () =
 
 [<EntryPoint>]
 let main argv = 
-    //if 3 = 3 then printfn "a"
     let testGrammar = new PEGParser()
-    let teste = parse testGrammar.calcOp "2 + 2 + 3 + 4 * 6 /   5"
+    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let teste2 = parse testGrammar.boolOp "true and false or false and true"
     //printfn "%A" teste2
     printfn "%A" teste
