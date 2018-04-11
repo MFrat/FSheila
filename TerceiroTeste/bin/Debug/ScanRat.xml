@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>ScanRat</name></assembly>
+<members>
+<member name="M:ScanRat.matchCharFun(System.String,Microsoft.FSharp.Core.FSharpFunc{System.Char,System.Boolean})">
+<summary>
+ Match one character
+</summary>
+</member>
+<member name="M:ScanRat.matchFun(System.String,Microsoft.FSharp.Core.FSharpFunc{System.String,Microsoft.FSharp.Core.FSharpFunc{System.Int32,Microsoft.FSharp.Core.FSharpOption{System.Int32}}})">
+<summary>
+ Match the input string starting the given index and return the number of matched characters or None if no match. 
+ May pass index = string length, may return Some 0 to match zero characters.
+</summary>
+</member>
+<member name="M:ScanRat.matchBack``1">
+<summary>
+ Match a number of characters before the current location
+ For example !!(matchBack 1 ~~&quot;a&quot;) succeeds of no &quot;a&quot; was found at the previous character position 
+ Note that the rule must match all the characters up to the current location to be successful
+</summary>
+</member>
+<member name="P:ScanRat.oneOf">
+<summary>
+ Match one character out of a given string.
+</summary>
+</member>
+<member name="M:ScanRat.op_TwiddleTwiddle(System.String)">
+<summary>
+ Match a string
+</summary>
+</member>
+</members>
+</doc>
