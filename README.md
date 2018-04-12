@@ -1,2 +1,23 @@
-# TCC-00.289-Compiladores
-Trabalho da disciplina de Compiladores ministrada pelo Professor Dr. Christiano Braga do IC/UFF cujo objetivo é criar um compilador para a "toy language" IMP utilizando F#.
+<p align="center">
+<img src="./img/logo.png">
+</p>
+
+# FSheila
+
+>FSheila is a compiler in F# for [IMP Programming Language](https://github.com/ChristianoBraga/BPLC/blob/master/examples/imp/README.md).
+
+## Overview
+
+This compiler is under development as a class assignment; therefore, it is highly recommended not to use it for any other proposal.
+
+Class: [TCC-00.289](http://www.ic.uff.br/index.php/en-GB/) ministred by Professor Dr. [Chistiano Braga](http://www2.ic.uff.br/~cbraga/pmwiki/pmwiki.php/Main/AffiliationAndResearchInterests).
+
+Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://github.com/MFrat/) and [Vítor Lourenço](https://github.com/vitornl/).
+
+## Start Guide
+
+### Prerequisits
+
+* [F# Programming Language](http://fsharp.org/)
+* [ScanRat](https://github.com/pragmatrix/ScanRat) parsing expression grammar for F#
+* Faith
