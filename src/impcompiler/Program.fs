@@ -29,6 +29,7 @@ type Cmd =
          //id é apenas uma string que representa o nome da variável
          | Var of string
          | Assign of string * Exp
+         | Init of string * Exp
          | If of boolExp * Cmd
          | Loop of boolExp * Cmd
          | Seq of boolExp * Cmd
@@ -158,6 +159,22 @@ type PEGParser () =
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
 
+
+        member this.initRule =
+            //let boole = this.boolOp
+             let numExp = this.calcOp //|- boole
+             //let boolEx = 
+             let initRule = production "initRule"
+             let oneAssignExp = (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Init
+             //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
+             //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
+             let moreAssigns =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             initRule.rule
+                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
+                <- ~~"init" +. (oneAssignExp + moreAssigns.oneOrMore.opt)
+             initRule
+         
+
         //regra do assign
         //nota: por enquanto só funciona para atribuições numéricas (inclusive atribuição de expressões numéricas). Falta eu fazer rodar pra operações booleanas tbm.
         member this.assignRule =
@@ -165,13 +182,13 @@ type PEGParser () =
              let numExp = this.calcOp //|- boole
              //let boolEx = this.boolOp
              let assignRule = production "assignRule"
-             let oneAssignExp = (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign
+             let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign
              //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              assignRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- ~~"init" +. (oneAssignExp + moreAssigns.oneOrMore.opt)
+                <- (oneAssignExp + moreAssigns.oneOrMore.opt)
              assignRule
 
         //member this.assignRule = this.id + this.assignOp + this.expRule
@@ -191,7 +208,8 @@ let main argv =
     //let teste = parse testGrammar.boolOp "3<=4 and 4<>5 or true and false and 666  <= 4 or 1981> 2007"
     //let teste = parse testGrammar.varRule "var x , y , z, a"
     //let teste = parse testGrammar.constRule "const abc , x , y , a69"
-    let teste = parse testGrammar.assignRule "init x = 2 , y = 555*6 , abhe =   1981"
+    //let teste = parse testGrammar.initRule "init x = 2 , y = 555*6/8 , abhe =   1981"
+    let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
     //printfn "%A" teste2
     printfn "%A" teste
     let sheila = Console.ReadLine()
