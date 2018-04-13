@@ -99,14 +99,15 @@ type PEGParser () =
              let andOp = production "andOp"
              let orOp = production "orOp"
 
-             let boolean = this.booleanType --> Boolean
+             let boolean = this.whitespace.oneOrMore.opt +. this.booleanType --> Boolean
              //se não me engano and tem precedência sobre or.
              let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
              let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
-             let ourNeg = ~~"~" +. boolean --> Neg
+             let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean) --> Neg
+                        |- ( this.whitespace.oneOrMore.opt + ~~"~" + this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"(" +. (andOp |- orOp) .+ this.whitespace.oneOrMore.opt .+ ~~")")  --> Neg
 
              andOp.rule
-                 <- ourAnd
+                 <- ourAnd 
                  |- ourOr
                  |- ourNeg
                  |- this.eqOp
@@ -161,17 +162,19 @@ type PEGParser () =
 
 
         member this.initRule =
-            //let boole = this.boolOp
-             let numExp = this.calcOp //|- boole
+                //boolexp tá bugado
+             let boole = this.boolOp 
+             let numExp = this.calcOp  //|- boole
              //let boolEx = 
              let initRule = production "initRule"
-             let oneAssignExp = (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Init
-             //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
+             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssigns = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssignsBool = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
              initRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- ~~"init" +. (oneAssignExp + moreAssigns.oneOrMore.opt)
+                <- (oneAssignExp |- oneAssignBoolex) + (moreAssigns |- moreAssignsBool)
              initRule
          
 
@@ -204,12 +207,15 @@ let main argv =
     let testGrammar = new PEGParser()
     //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
+    //let teste = parse testGrammar.boolOp "~(true and ~false)"
+    //let teste = parse testGrammar.boolOp "~(true and ~(3<>4))"
     //let teste2 = parse testGrammar.boolOp "true and false or false and true"
     //let teste = parse testGrammar.boolOp "3<=4 and 4<>5 or true and false and 666  <= 4 or 1981> 2007"
     //let teste = parse testGrammar.varRule "var x , y , z, a"
     //let teste = parse testGrammar.constRule "const abc , x , y , a69"
     //let teste = parse testGrammar.initRule "init x = 2 , y = 555*6/8 , abhe =   1981"
-    let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
+    //let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
+    let teste = parse testGrammar.boolOp "~(true and ~(3<>4))" // , xvideos = 666/8+9*4 , aee = 666"
     //printfn "%A" teste2
     printfn "%A" teste
     let sheila = Console.ReadLine()
