@@ -32,16 +32,14 @@ type Cmd =
          | Init of string * Exp
          | If of boolExp * Cmd
          | Loop of boolExp * Cmd
-         | Seq of boolExp * Cmd
-         
-
+         | Seq of Cmd * Cmd //list//cmds
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
 
         //basic shit:
         member this.whitespace = (~~" ").oneOrMore
-        member this.breakline = (~~"\n").oneOrMore
+        member this.linebreak = (~~"\n").oneOrMore
 
         member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
         member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
@@ -160,15 +158,14 @@ type PEGParser () =
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
 
-
         member this.initRule =
                 //boolexp tá bugado
-             let boole = this.boolOp 
+             let boole = this.boolOp --> Boolexp
              let numExp = this.calcOp  //|- boole
              //let boolEx = 
              let initRule = production "initRule"
-             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
-             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
+             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
              let moreAssigns = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              let moreAssignsBool = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
@@ -188,22 +185,54 @@ type PEGParser () =
              let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign
              //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             //NOTA2: assigns são únicos (diferentes de init). Múltiplos assigns devem fazer uso do comando de sequência.
+             //let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              assignRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- (oneAssignExp + moreAssigns.oneOrMore.opt)
+                <- (oneAssignExp) //+ moreAssigns.oneOrMore.opt)
              assignRule
+        
+        
 
-        //member this.assignRule = this.id + this.assignOp + this.expRule
-        //member this.varRule = this.varOp +. this.id
-        //member this.atribRule = this.varRule + this.assignRule //var num := 2 + 2
-        //member this.consRule = this.consOp + this.id
-        //member this.iniRule = this.id + this.iniOp + this.expRule
-        //member this.initRule = this.initOp + this.iniRule
+        member this.command = this.assignRule.oneOrMore
 
+        //regra do bloco de comando
+        //obviamente está errado.
+        member this.blockRule = 
+                let blockRule = production "blockRule"
+                let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. this.command .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
+                blockRule.rule
+                    <- ~~"{" +. simpleCommand .+ ~~"}"
+                blockRule
+         
+        //BUGADO
+        member this.ifRule =
+               let command = this.command
+               let boolExp = this.boolOp
+               let block = this.blockRule
+
+               let ifRule = production "ifRule"
+               let aIf = ~~"if" + boolExp + command + ~~"else" +. command 
+               let aIfBlock =  ~~"if" +. boolExp + block .+ ~~"else" +. command
+               let aIfBlock2 =  ~~"if" +. boolExp + command .+ ~~"else" +. block
+               let aIfBlock3 = ~~"if" +. boolExp + block .+ ~~"else" +. block
+               ifRule.rule
+                     <- (aIf |- aIfBlock |- aIfBlock2 |- aIfBlock3)
+               ifRule
+        //regra de sequência (aparentemente 100%)
+        member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
+               let command =  this.assignRule
+               let seqRule = production "seqRule"
+               let seq = (this.whitespace.oneOrMore.opt +. command .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. seqRule .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+               seqRule.rule
+                  <- seq |- command  //|- this.whitespace.oneOrMore.opt + ~~";" + this.whitespace.oneOrMore.opt +. (command)
+               seqRule
+
+       
 
 [<EntryPoint>]
 let main argv = 
+    //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas
     let testGrammar = new PEGParser()
     //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
@@ -215,7 +244,9 @@ let main argv =
     //let teste = parse testGrammar.constRule "const abc , x , y , a69"
     //let teste = parse testGrammar.initRule "init x = 2 , y = 555*6/8 , abhe =   1981"
     //let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
-    let teste = parse testGrammar.boolOp "~(true and ~(3<>4))" // , xvideos = 666/8+9*4 , aee = 666"
+    //let teste = parse testGrammar.boolOp "~(true and ~(3<>4 and false))" // , xvideos = 666/8+9*4 , aee = 666"
+    //let teste = parse testGrammar.blockRule "{ sexo := 3}" 
+    let teste = parse testGrammar.seqRule "a := 333 ; b := 444 ; ccc := 69-66*8 ; cas := 0 "//; b:= 555" 
     //printfn "%A" teste2
     printfn "%A" teste
     let sheila = Console.ReadLine()
