@@ -31,15 +31,15 @@ type Cmd =
          | Assign of string * Exp
          | Init of string * Exp
          | If of boolExp * Cmd
-         | Loop of boolExp * Cmd
-         | Seq of Cmd * Cmd //list//cmds
+         | Loop of boolExp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | Seq of Cmd * Cmd 
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
 
         //basic shit:
         member this.whitespace = (~~" ").oneOrMore
-        member this.linebreak = (~~"\n").oneOrMore
+        member this.linebreak = (~~"\r\n").oneOrMore
 
         member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
         member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
@@ -129,13 +129,6 @@ type PEGParser () =
                  |- boolean
                 
              andOp
-        //a ideia é fazer algo parecido com o que foi feito nas duas situações acima
-        //as 5 operações abaixo estão incorretas e serão removidas
-        //member this.assignOp = this.whitespace.oneOrMore.opt + ~~":=" + this.whitespace.oneOrMore.opt
-        member this.varOp = ~~"var" //+ this.whitespace.oneOrMore.opt
-        member this.consOp = ~~"cons" + this.whitespace.oneOrMore.opt
-        member this.initOp = ~~"init" + this.whitespace.oneOrMore.opt
-        member this.iniOp = this.whitespace.oneOrMore.opt + ~~"=" + this.whitespace.oneOrMore.opt
 
 
         //commands:
@@ -191,19 +184,6 @@ type PEGParser () =
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
                 <- (oneAssignExp) //+ moreAssigns.oneOrMore.opt)
              assignRule
-        
-        
-
-        member this.command = this.assignRule.oneOrMore
-
-        //regra do bloco de comando
-        //obviamente está errado.
-        member this.blockRule = 
-                let blockRule = production "blockRule"
-                let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. this.command .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
-                blockRule.rule
-                    <- ~~"{" +. simpleCommand .+ ~~"}"
-                blockRule
          
         //BUGADO
         member this.ifRule =
@@ -220,13 +200,27 @@ type PEGParser () =
                      <- (aIf |- aIfBlock |- aIfBlock2 |- aIfBlock3)
                ifRule
         //regra de sequência (aparentemente 100%)
+        //NOTA: na semântica de seq manter a ordem de execução de forma consistente (não sair empilhando descaradamente para depois resolver)
         member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
                let command =  this.assignRule
                let seqRule = production "seqRule"
-               let seq = (this.whitespace.oneOrMore.opt +. command .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. seqRule .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. command .+ this.whitespace.oneOrMore.opt) .+ ~~";" + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqRule .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <- seq |- command  //|- this.whitespace.oneOrMore.opt + ~~";" + this.whitespace.oneOrMore.opt +. (command)
+                  <- seq |- command  
                seqRule
+
+        //regra do bloco de comando, parece estar 100%
+        member this.blockRule = 
+                let blockRule = production "blockRule"
+                //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
+                blockRule.rule
+                    //gambiarra para contornar espaços depois do {
+                    <- (this.whitespace.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. this.seqRule .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt)
+                blockRule
+        member this.command = this.blockRule //|- this.loopRule.oneOrMore
+
+        //de loop só tem o while na documentação da IMP:
+        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
 
        
 
@@ -244,9 +238,19 @@ let main argv =
     //let teste = parse testGrammar.constRule "const abc , x , y , a69"
     //let teste = parse testGrammar.initRule "init x = 2 , y = 555*6/8 , abhe =   1981"
     //let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
-    //let teste = parse testGrammar.boolOp "~(true and ~(3<>4 and false))" // , xvideos = 666/8+9*4 , aee = 666"
-    //let teste = parse testGrammar.blockRule "{ sexo := 3}" 
-    let teste = parse testGrammar.seqRule "a := 333 ; b := 444 ; ccc := 69-66*8 ; cas := 0 "//; b:= 555" 
+    //let teste = parse testGrammar.boolOp "~(true and ~(3<>4 and false))" 
+    //let teste = parse testGrammar.blockRule "{ sexo := 3}"
+    //embora o teste abaixo para mim nao deveria funcionar, boa sorte se quiser fazer a sequencia funcionar de boa de outra forma
+    //let teste = parse testGrammar.seqRule "a:= 333"
+    //let teste = parse testGrammar.seqRule "a := 333 ; b := 444 ; ccc := 69-66*8 ; cas := 0 "//; b:= 555"
+    //let teste = parse testGrammar.seqRule " a:= 333;b := 888 * 7 ; c := 666*777/8"
+    let teste = parse testGrammar.loopRule "while 3<>4 { 
+                                                  sheila3 := 555+8 ; 
+                                                  sheila := 9999 ; ati := 999*555 ;
+
+                                                  aaa := 1+9-5*8  
+                                                  }"
+    //let teste = parse testGrammar.ifRule "if 
     //printfn "%A" teste2
     printfn "%A" teste
     let sheila = Console.ReadLine()
