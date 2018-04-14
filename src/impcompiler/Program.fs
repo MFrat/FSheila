@@ -192,7 +192,7 @@ type PEGParser () =
                let block = this.blockRule
 
                let ifRule = production "ifRule"
-               let aIf = ~~"if" + boolExp + command + ~~"else" +. command 
+               let aIf = ~~"if" + boolExp + this.whitespace.oneOrMore + command + this.whitespace.oneOrMore + ~~"else" +. command 
                let aIfBlock =  ~~"if" +. boolExp + block .+ ~~"else" +. command
                let aIfBlock2 =  ~~"if" +. boolExp + command .+ ~~"else" +. block
                let aIfBlock3 = ~~"if" +. boolExp + block .+ ~~"else" +. block
@@ -217,7 +217,7 @@ type PEGParser () =
                     //gambiarra para contornar espaços depois do {
                     <- (this.whitespace.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. this.seqRule .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt)
                 blockRule
-        member this.command = this.blockRule //|- this.loopRule.oneOrMore
+        member this.command = this.blockRule |- this.assignRule //|- this.assignRule //|- this.loopRule.oneOrMore
 
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
@@ -226,6 +226,10 @@ type PEGParser () =
 
 [<EntryPoint>]
 let main argv = 
+    let valueOf r =
+        match r with
+        | Success s -> s.value
+        | Failure _ -> failwith "parse failed"
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas
     let testGrammar = new PEGParser()
     //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
@@ -248,11 +252,13 @@ let main argv =
                                                   sheila3 := 555+8 ; 
                                                   sheila := 9999 ; ati := 999*555 ;
 
+
                                                   aaa := 1+9-5*8  
                                                   }"
-    //let teste = parse testGrammar.ifRule "if 
-    //printfn "%A" teste2
+    //let teste2 = parse testGrammar.ifRule "if true a := 3 else a:=4"
+    //let ae = valueOf teste
     printfn "%A" teste
+    //printfn "%A" teste
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     //printfn "%A" argv
