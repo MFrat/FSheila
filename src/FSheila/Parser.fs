@@ -30,9 +30,10 @@ type Cmd =
          | Var of string
          | Assign of string * Exp
          | Init of string * Exp
-         | If of boolExp * Cmd
+         | If of boolExp * Cmd * Cmd
          | Loop of boolExp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
-         | Seq of Cmd * Cmd 
+         | Seq of Cmd * Cmd
+         | Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -181,21 +182,21 @@ type PEGParser () =
              //NOTA2: assigns são únicos (diferentes de init). Múltiplos assigns devem fazer uso do comando de sequência.
              //let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              assignRule.rule
-                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
+                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
                 <- (oneAssignExp) //+ moreAssigns.oneOrMore.opt)
              assignRule
          
-        //BUGADO
+
         member this.ifRule =
-               let command = this.command
+               //let command = this.assignRule
                let boolExp = this.boolOp
                let block = this.blockRule
 
                let ifRule = production "ifRule"
-               let aIf = ~~"if" + boolExp + this.whitespace.oneOrMore + command + this.whitespace.oneOrMore + ~~"else" +. command 
-               let aIfBlock =  ~~"if" +. boolExp + block .+ ~~"else" +. command
-               let aIfBlock2 =  ~~"if" +. boolExp + command .+ ~~"else" +. block
-               let aIfBlock3 = ~~"if" +. boolExp + block .+ ~~"else" +. block
+               let aIf = ~~"if" +. boolExp + this.command .+ ~~"else" + this.command --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               let aIfBlock =  ~~"if" +. boolExp + block .+ ~~"else" + this.command  -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               let aIfBlock2 =  ~~"if" +. boolExp + this.command .+ ~~"else" + block --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               let aIfBlock3 = ~~"if" +. boolExp + block .+ ~~"else" + block -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
                ifRule.rule
                      <- (aIf |- aIfBlock |- aIfBlock2 |- aIfBlock3)
                ifRule
@@ -215,7 +216,7 @@ type PEGParser () =
                 //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
                 blockRule.rule
                     //gambiarra para contornar espaços depois do {
-                    <- (this.whitespace.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. this.seqRule .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt)
+                    <- (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. this.seqRule .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) //--> Block
                 blockRule
         member this.command = this.blockRule |- this.assignRule //|- this.assignRule //|- this.loopRule.oneOrMore
 

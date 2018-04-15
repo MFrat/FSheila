@@ -2,12 +2,12 @@
 // Veja o projeto 'F# Tutorial' para obter mais ajuda.
 module FSheila.Smc
 
+open ScanRat
 open FSheila
 open Parser
-open ScanRat
 
 type Stack = 
-    | StackContents of _ list
+    | StackContents of Exp list
 
 let push x (StackContents contents) =   
     StackContents (x::contents)
@@ -25,11 +25,11 @@ let C = StackContents []
 
 let rec calculator exp = 
     match exp with
-    | Add (a, b) -> push Add S, (calculator a), (calculator b)
-    | Subtract (a, b) -> push Subtract S |> (calculator a) - (calculator b)
-    | Multiply (a, b) -> push Multiply S |> (calculator a) * (calculator b)
-    | Divide (a, b) -> push Divide S |> (calculator a) / (calculator b)
-    | Number a -> push a C |>  a
+    | Add (a, b) -> (calculator a) + (calculator b) //|> push Add S
+    | Subtract (a, b) -> (calculator a) - (calculator b) //|> push Subtract S
+    | Multiply (a, b) -> (calculator a) * (calculator b) //|> push Multiply S
+    | Divide (a, b) -> (calculator a) / (calculator b) //|> push Divide S
+    | Number a ->  a //|> push a C
 
 let math exp = 
     match exp with
