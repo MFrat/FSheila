@@ -12,13 +12,13 @@ open Smc
 
 [<EntryPoint>]
 let main argv = 
-    let valueOf r =
-        match r with
-        | Success s -> s.value
-        | Failure _ -> failwith "parse failed"
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas
     let testGrammar = new PEGParser()
-    //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
+    let teste = parse testGrammar.calcOp "2+2*3" //"-21 + 5555 + 3 + 4 * 666 /   5"
+    //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
+    //let teste = parse testGrammar.varRule "var x , y , z, a"
+    let a = arritimia_chris teste
+    printfn "%A" a
     //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
     //let teste = parse testGrammar.boolOp "~(true and ~false)"
     //let teste = parse testGrammar.boolOp "~(true and ~(3<>4))"
@@ -34,16 +34,16 @@ let main argv =
     //let teste = parse testGrammar.seqRule "a:= 333"
     //let teste = parse testGrammar.seqRule "a := 333 ; b := 444 ; ccc := 69-66*8 ; cas := 0 "//; b:= 555"
     //let teste = parse testGrammar.seqRule " a:= 333;b := 888 * 7 ; c := 666*777/8"
-    let teste = parse testGrammar.loopRule "while 3<>4 { 
-                                                  sheila3 := 555+8 ; 
-                                                  sheila := 9999 ; ati := 999*555 ;
-
-
-                                                  aaa := 1+9-5*8  
-                                                  }"
+    //let teste = parse testGrammar.loopRule "while 3<>4 { 
+    //                                              sheila3 := 555+8 ; 
+    //                                              sheila := 9999 ; ati := 999*555 ;
+    //
+    //
+    //                                              aaa := 1+9-5*8  
+    //                                              }"
     //let teste2 = parse testGrammar.ifRule "if true a := 3 else a:=4"
     //let ae = valueOf teste
-    printfn "%A" teste
+    //printfn "%A" teste
     //printfn "%A" teste
     let sheila = Console.ReadLine()
     printfn "%A" sheila

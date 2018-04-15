@@ -3,7 +3,6 @@
 module FSheila.Parser
 
 open ScanRat
-open System
 
 //tipo base de operações booleanas
 type boolExp = 
