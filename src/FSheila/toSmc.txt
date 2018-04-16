@@ -1,0 +1,12 @@
+function smc(stmt){
+    if isLeafStatement(stmt){
+        return convertToSmc(stmt)
+    }
+
+    subStmtArray = []
+    for i in getChilds(stmt){
+        subStmtArray.add(smc(i))
+    }
+
+    return convertToSmcList(subStmtArray)
+}
