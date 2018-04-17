@@ -1,4 +1,4 @@
-﻿// Saiba mais sobre F# em http://fsharp.org
+﻿    // Saiba mais sobre F# em http://fsharp.org
 // Veja o projeto 'F# Tutorial' para obter mais ajuda.
 module FSheila.FSheila
 
@@ -21,7 +21,7 @@ let main argv =
     //let teste = parse testGrammar.boolOp "3<=4 and 4<>5 or true and false and 666  <= 4 or 1981> 2007"
     //let teste = parse testGrammar.varRule "var x , y , z, a"
     //let teste = parse testGrammar.constRule "const abc , x , y , a69"
-    //let teste = parse testGrammar.initRule "init x = 2 , y = 555*6/8 , abhe =   1981"
+    let teste3 = parse testGrammar.initRule "init x = 2 "
     //let teste = parse testGrammar.assignRule "a := 444*58- 69 ; u := 1+2*333 + 8"
     //let teste = parse testGrammar.boolOp "~(true and ~(3<>4 and false))" 
     //embora o teste abaixo para mim nao deveria funcionar, boa sorte se quiser fazer a sequencia funcionar de boa de outra forma
@@ -31,7 +31,7 @@ let main argv =
     let teste = parse testGrammar.loopRule "while 3<>4 { 
                                                   sheila3 := 555+8 ; 
                                                   sheila := 9999 ; ati := 999*555 ;
-
+                                                  sheila2 := 4 <> 4 and false ;
 
                                                   aaa := 1+9-5*8  
                                                   }"
@@ -51,8 +51,9 @@ let main argv =
                                                        sheila := 4;
                                                        spacer := 69;
                                                        star := 4*78/9-6}"
+    //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3 ; bunda := 5<>70"
     //let ae = valueOf teste
-    printfn "%A" teste2
+    printfn "%A" teste3
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     //printfn "%A" argv

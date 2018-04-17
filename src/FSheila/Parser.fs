@@ -5,17 +5,17 @@ module FSheila.Parser
 open ScanRat
 
 //tipo base de operações booleanas
-type boolExp = 
-            | And of boolExp * boolExp
-            | Or of boolExp * boolExp
-            | Neg of boolExp
-            | Eq of int * int 
-            | Leb of int * int
-            | Leq of int * int
-            | Geb of int * int
-            | Geq of int * int
-            | Neq of int * int
-            | Boolean of bool
+//type boolExp = 
+//            | And of boolExp * boolExp
+//            | Or of boolExp * boolExp
+//            | Neg of boolExp
+//            | Eq of int * int 
+//            | Leb of int * int
+//            | Leq of int * int
+//            | Geb of int * int
+//            | Geq of int * int
+//            | Neq of int * int
+//            | Boolean of bool
  //tipo base de expressões matemáticas
 type Exp =  
             | Add of Exp * Exp
@@ -23,15 +23,24 @@ type Exp =
             | Multiply of Exp * Exp
             | Divide of Exp * Exp
             | Number of int
-            | Boolexp of boolExp
+            | And of Exp * Exp
+            | Or of Exp * Exp
+            | Neg of Exp
+            | Eq of  int * int 
+            | Leb of int * int
+            | Leq of int * int
+            | Geb of int * int
+            | Geq of int * int
+            | Neq of int * int
+            | Boolean of bool
 //tipo base de operações de comando
 type Cmd =
          //id é apenas uma string que representa o nome da variável
          | Var of string
          | Assign of string * Exp
          | Init of string * Exp
-         | If of boolExp * Cmd * Cmd
-         | Loop of boolExp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | If of Exp * Cmd * Cmd //boolExp vira Exp
+         | Loop of Exp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
          | Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
@@ -91,6 +100,7 @@ type PEGParser () =
         member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
         member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
         member this.neqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
+        member this.compareOp = this.eqOp |- this.lebOp |- this.leqOp |-this.gebOp |- this.neqOp
         //member this.orOp = this.whitespace.oneOrMore.opt + ~~"or" + this.whitespace.oneOrMore.opt
         //member this.andOp = this.whitespace.oneOrMore.opt + ~~"and" + this.whitespace.oneOrMore.opt
 
@@ -99,6 +109,7 @@ type PEGParser () =
              let orOp = production "orOp"
 
              let boolean = this.whitespace.oneOrMore.opt +. this.booleanType --> Boolean
+             
              //se não me engano and tem precedência sobre or.
              let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
              let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
@@ -151,39 +162,40 @@ type PEGParser () =
                constAtr.rule
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
-
+        //TODO debugar essa porra aqui
         member this.initRule =
                 //boolexp tá bugado
-             let boole = this.boolOp --> Boolexp
-             let numExp = this.calcOp  //|- boole
+             let boole = this.boolOp //--> Boolexp
+             let numExp = this.calcOp //|- boole
              //let boolEx = 
              let initRule = production "initRule"
              let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
              let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
-             let moreAssignsBool = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
-             initRule.rule
+             let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             initRule.rule //tem que ver isso aqui
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- (oneAssignExp |- oneAssignBoolex) + (moreAssigns |- moreAssignsBool)
+                <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
              initRule
          
 
         //regra do assign
         //nota: por enquanto só funciona para atribuições numéricas (inclusive atribuição de expressões numéricas). Falta eu fazer rodar pra operações booleanas tbm.
         member this.assignRule =
-             //let boole = this.boolOp
+             let boole = this.boolOp |- this.compareOp
              let numExp = this.calcOp //|- boole
              //let boolEx = this.boolOp
              let assignRule = production "assignRule"
              let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign
+             let oneAssignBool = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. boole .+ this.whitespace.oneOrMore.opt) --> Assign
              //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
              //NOTA2: assigns são únicos (diferentes de init). Múltiplos assigns devem fazer uso do comando de sequência.
              //let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              assignRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
-                <- (oneAssignExp) //+ moreAssigns.oneOrMore.opt)
+                <- ( oneAssignBool |- oneAssignExp) //+ moreAssigns.oneOrMore.opt)
              assignRule
          
 
