@@ -20,4 +20,5 @@ Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://gi
 
 * [F# Programming Language](http://fsharp.org/)
 * [ScanRat](https://github.com/pragmatrix/ScanRat) parsing expression grammar for F#
+* [.Net Core 2.0](https://www.microsoft.com/net/download/linux)
 * Faith
