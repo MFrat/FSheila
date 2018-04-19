@@ -11,7 +11,7 @@ open Smc
       
 [<EntryPoint>]
 let main argv = 
-    //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas
+    //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
     //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
@@ -32,6 +32,7 @@ let main argv =
                                                   sheila3 := 555+8 ; 
                                                   sheila := 9999 ; ati := 999*555 ;
                                                   sheila2 := 4 <> 4 and false ;
+                                                  sheila3 := 4==6 or ~(3<5 and false);
 
                                                   aaa := 1+9-5*8  
                                                   }"
@@ -51,9 +52,15 @@ let main argv =
                                                        sheila := 4;
                                                        spacer := 69;
                                                        star := 4*78/9-6}"
-    //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3 ; bunda := 5<>70"
+    let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
+
+
+    //TESTES de SMC daqui para baixo:
+    let teste4 = parse testGrammar.calcOp " 4 + 4"
+    //let x = new SMC()
+
     //let ae = valueOf teste
-    printfn "%A" teste3
+    printfn "%A" teste4
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     //printfn "%A" argv

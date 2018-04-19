@@ -17,6 +17,7 @@ open ScanRat
 //            | Neq of int * int
 //            | Boolean of bool
  //tipo base de expressões matemáticas
+ //NOTA: atualmente NENHUMA operação (aritmetica, booleana,comando) aceita variável definida. isso deve ser revisto
 type Exp =  
             | Add of Exp * Exp
             | Subtract of Exp * Exp
