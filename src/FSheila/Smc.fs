@@ -37,6 +37,13 @@ let rec calculator exp = //a ideia parece ser exatamente isso
     | Divide (a, b) -> (calculator a) / (calculator b) //|> push Divide S
     | Number a ->  a //|> push a C
 
+let rec calcbool exp = //a ideia parece ser exatamente isso
+    match exp with
+    | And (a, b) -> (calcbool a) && (calcbool b) //|> push And S
+    | Or (a, b) -> (calcbool a) || (calcbool b) //|> push Or S
+    | Neg a -> not(calcbool a) //|> push Neg S
+    | Boolean a -> a //|> push a C
+
 //structs costumam ser mais eficientes que classes quando com poucos membros
 //https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/structures
 type SMC = //parece ser melhpr transformar isso num tipo record
