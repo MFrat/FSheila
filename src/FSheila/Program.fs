@@ -1,4 +1,4 @@
-﻿    // Saiba mais sobre F# em http://fsharp.org
+﻿// Saiba mais sobre F# em http://fsharp.org
 // Veja o projeto 'F# Tutorial' para obter mais ajuda.
 module FSheila.FSheila
 
@@ -47,20 +47,24 @@ let main argv =
     let teste2 = parse testGrammar.ifRule "if 7 <= 9 {
                                            sheila := 444;
                                            stack := 685/5;
-                                           overflow := 48
+                                           overflow := 48 + abcd * sheila
                                            } else    { 
                                                        sheila := 4;
                                                        spacer := 69;
                                                        star := 4*78/9-6}"
-    let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
+    //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
 
 
+
+    let teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
     //TESTES de SMC daqui para baixo:
-    let teste4 = parse testGrammar.calcOp " 4 + 4"
     //let x = new SMC()
-
+    let get exp = 
+      match exp with
+        | Success s ->  s.value
+        | Failure f -> failwith "fail"
     //let ae = valueOf teste
-    printfn "%A" teste
+    printfn "%A" (get teste)
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     //printfn "%A" argv
