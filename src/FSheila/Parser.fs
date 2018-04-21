@@ -44,7 +44,7 @@ type Cmd =
          | If of Exp * Cmd * Cmd //boolExp vira Exp
          | Loop of Exp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
-         | Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
+         //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
