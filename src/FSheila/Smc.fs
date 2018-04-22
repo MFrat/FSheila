@@ -61,8 +61,8 @@ let rec calcbool exp = //a ideia parece ser exatamente isso
 //https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/structures
 type SMC = //parece ser melhor transformar isso num tipo record
     struct
-       val S : Stack<Exp> //aqui ficam valores resultantes de processamentos de comandos na pilha de controle (strings, bool e numeros)
-       val M : Dictionary<string,Exp> //M é um dicionário onde a chave é uma string e valor é uma Exp(booleano ou numérico) //Exp list  //criar uma função que mapeie uma var -> conteúdo na memória (um inteiro ou um booleano, de acordo com o que for definido para a variável.   //não gostei de Exp list, mas..
+       val S : Stack<Cmd> //aqui ficam valores resultantes de processamentos de comandos na pilha de controle (strings, bool e numeros)
+       val M : Dictionary<string,Cmd> //M é um dicionário onde a chave é uma string e valor é uma Exp(booleano ou numérico) //Exp list  //criar uma função que mapeie uma var -> conteúdo na memória (um inteiro ou um booleano, de acordo com o que for definido para a variável.   //não gostei de Exp list, mas..
        val C : Stack<Cmd> //a pilha de conrole possui apenas comandos. tem que ver isso melhor 
        //new() = {S = [], M = [], C = []} //isso eu acho que eu já ganho por padrão. A inicialização default da estrutura consiste nas três composições estando vazias a princípio.
     end
@@ -71,7 +71,7 @@ type SMC = //parece ser melhor transformar isso num tipo record
 //manipulação da memória
 let getFromMemory (s:SMC) (var:string) = s.M.Item(var) //retorna o valor de M associado á variável var
 
-let addToMemory (s:SMC) (var:string) (e:Exp) = s.M.Add(var,e)
+let addToMemory (s:SMC) (var:string) (e:Cmd) = s.M.Add(var,e)
 
 //regra de introdução do comando Assign
 //NOTA: por chatices do caralho de tipagem em F#, parece ser impossível se livrar desses identificadores que constroem um tipo para fins de manipulações (como armazenar na pilha). Nesse caso, o id da variavel que ficar em var vai ter que ter o Id

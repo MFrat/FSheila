@@ -13,7 +13,7 @@ open Smc
 let main argv = 
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
-    //let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
+    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
     let teste = parse testGrammar.boolOp "~(true and ~false)"
     //let teste = parse testGrammar.boolOp "~(true and ~(3<>4))"
@@ -57,6 +57,7 @@ let main argv =
 
 
     let teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
+    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //TESTES de SMC daqui para baixo:
     //let x = new SMC()
     let get exp = 
