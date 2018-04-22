@@ -17,33 +17,50 @@ open ScanRat
 //            | Neq of int * int
 //            | Boolean of bool
  //tipo base de expressões matemáticas
- //NOTA: atualmente NENHUMA operação (aritmetica, booleana,comando) aceita variável definida. isso deve ser revisto
-type Exp =  
-            | Add of Exp * Exp
-            | Subtract of Exp * Exp
-            | Multiply of Exp * Exp
-            | Divide of Exp * Exp
-            | And of Exp * Exp
-            | Or of Exp * Exp
-            | Neg of Exp
-            | Eq of  Exp * Exp
-            | Leb of Exp * Exp
-            | Leq of Exp * Exp
-            | Geb of Exp * Exp
-            | Geq of Exp * Exp
-            | Neq of Exp * Exp
-            | Number of int
-            | Boolean of bool
-            | Id of string
+
+//type Exp =  
+//            | Add of Exp * Exp
+//            | Subtract of Exp * Exp
+//            | Multiply of Exp * Exp
+//            | Divide of Exp * Exp
+//            | And of Exp * Exp
+//            | Or of Exp * Exp
+//            | Neg of Exp
+//            | Eq of  Exp * Exp
+//            | Leb of Exp * Exp
+//            | Leq of Exp * Exp
+//            | Geb of Exp * Exp
+//            | Geq of Exp * Exp
+//            | Neq of Exp * Exp
+//            | Number of int
+//            | Boolean of bool
+//            | Id of string
 //tipo base de operações de comando
 type Cmd =
          //id é apenas uma string que representa o nome da variável
          | Var of string
-         | Assign of string * Exp
-         | Init of string * Exp
-         | If of Exp * Cmd * Cmd //boolExp vira Exp
-         | Loop of Exp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | Assign of string * Cmd
+         | Init of string * Cmd
+         | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
+         | Loop of Cmd * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
+         | Add of Cmd * Cmd
+         | Subtract of Cmd * Cmd
+         | Multiply of Cmd * Cmd
+         | Divide of Cmd * Cmd
+         | And of Cmd * Cmd
+         | Or of Cmd * Cmd
+         | Neg of Cmd
+         | Eq of  Cmd * Cmd
+         | Leb of Cmd * Cmd
+         | Leq of Cmd * Cmd
+         | Geb of Cmd * Cmd
+         | Geq of Cmd * Cmd
+         | Neq of Cmd * Cmd
+         | Number of int
+         | Boolean of bool
+         | Id of string
+
          //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
