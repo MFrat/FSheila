@@ -58,10 +58,15 @@ let main argv =
 
     //let teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
-    let smc = new SMC()
-    printfn " oi %A" (getFromParser teste smc)
-    calculator
-    printstacks
+    //let smc = new SMC()
+    getFromParser teste
+    printfn "X = %A" (X)
+    printfn "S = %A" (S)
+    printfn "C = %A" (C)
+    calculator C
+    printfn "X = %A" (X)
+    printfn "S = %A" (S)
+    printfn "C = %A" (C)
     //TESTES de SMC daqui para baixo:
     //let x = new SMC()
     let get exp = 
