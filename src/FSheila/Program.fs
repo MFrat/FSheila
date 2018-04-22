@@ -1,6 +1,4 @@
-﻿// Saiba mais sobre F# em http://fsharp.org
-// Veja o projeto 'F# Tutorial' para obter mais ajuda.
-module FSheila.FSheila
+﻿module FSheila.FSheila
 
 open ScanRat
 open System
@@ -60,7 +58,6 @@ let main argv =
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let smc = new SMC()
     getFromParser teste
-    
     printfn "X = %A" (X)
     printfn "S = %A" (S)
     printfn "C = %A" (C)
