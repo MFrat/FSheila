@@ -60,10 +60,7 @@ let main argv =
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let smc = new SMC()
     getFromParser teste
-    printfn "X = %A" (X)
-    printfn "S = %A" (S)
-    printfn "C = %A" (C)
-    calculator C
+    
     printfn "X = %A" (X)
     printfn "S = %A" (S)
     printfn "C = %A" (C)
