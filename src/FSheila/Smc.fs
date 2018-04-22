@@ -42,21 +42,6 @@ open System.Collections.Generic //daqui vem o dicionario
 //let S = StackContents []
 //let C = StackContents []
 
-let rec calculator exp = //a ideia parece ser exatamente isso
-    match exp with
-    | Add (a, b) -> (calculator a) + (calculator b) //|> push Add S
-    | Subtract (a, b) -> (calculator a) - (calculator b) //|> push Subtract S
-    | Multiply (a, b) -> (calculator a) * (calculator b) //|> push Multiply S
-    | Divide (a, b) -> (calculator a) / (calculator b) //|> push Divide S
-    | Number a ->  a //|> push a C
-
-let rec calcbool exp = //a ideia parece ser exatamente isso
-    match exp with
-    | And (a, b) -> (calcbool a) && (calcbool b) //|> push And S
-    | Or (a, b) -> (calcbool a) || (calcbool b) //|> push Or S
-    | Neg a -> not(calcbool a) //|> push Neg S
-    | Boolean a -> a //|> push a C
-
 //structs costumam ser mais eficientes que classes quando com poucos membros
 //https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/structures
 type SMC = //parece ser melhor transformar isso num tipo record
@@ -65,6 +50,7 @@ type SMC = //parece ser melhor transformar isso num tipo record
        val M : Dictionary<string,Cmd> //M é um dicionário onde a chave é uma string e valor é uma Exp(booleano ou numérico) //Exp list  //criar uma função que mapeie uma var -> conteúdo na memória (um inteiro ou um booleano, de acordo com o que for definido para a variável.   //não gostei de Exp list, mas..
        val C : Stack<Cmd> //a pilha de conrole possui apenas comandos. tem que ver isso melhor 
        //new() = {S = [], M = [], C = []} //isso eu acho que eu já ganho por padrão. A inicialização default da estrutura consiste nas três composições estando vazias a princípio.
+       val Especial : Stack<string>
     end
 
 //regras da SMC
@@ -81,15 +67,29 @@ let varIntro (smc:SMC) =
     match (smc.C.Pop()) with
     | Assign (a, b) -> smc.S.Push(Id a) //falta empilhar o b de volta em C... aqui é o correspondente à introdução do Assign (a regra C := I do plotkin)
 
-let getFromParser exp (smc:SMC) =
+let getFromParser exp (smc:SMC) : int =
     match exp with
     | Success r ->  smc.C.Push(r.value)
     | Failure _ -> failwith "Parsing falhou!"
-
-let math exp = 
-    match exp with
-    | Success s -> calculator s.value
-    | Failure f -> failwith "deu bosta então se foda"   
-
+    
+    0
 
     //de acordo com as transições em SMC (descritas nas páginas 15, 16 e 17
+
+    
+let rec calculator (smc:SMC) = //a ideia parece ser exatamente isso
+    printfn "%A" smc.C.ToString
+    while smc.C.Count = 0 do
+        match smc.C.Pop() with
+        | Add (a, b) -> smc.Especial.Push("Add")// (calculator a) + (calculator b) //|> push Add S
+        | Subtract (a, b) -> smc.Especial.Push("Subtract")//(calculator a) - (calculator b) //|> push Subtract S
+        | Multiply (a, b) -> smc.Especial.Push("Multiply")//(calculator a) * (calculator b) //|> push Multiply S
+        | Divide (a, b) -> smc.Especial.Push("Divide")//(calculator a) / (calculator b) //|> push Divide S
+        | And (a, b) -> smc.Especial.Push("And")//(calculator a) && (calculator b) //|> push And S
+        | Or (a, b) -> smc.Especial.Push("Or")//(calculator a) || (calculator b) //|> push Or S
+        | Neg a -> smc.Especial.Push("Neg")//not(calculator a) //|> push Neg S
+        | Number a ->  smc.S.Push(Number a)
+        | Boolean a -> smc.S.Push(Boolean a)
+
+let printstacks (smc:SMC) = 
+    printfn "S = %A" smc.S.ToString
