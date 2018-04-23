@@ -20,4 +20,13 @@ Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://gi
 
 * [F# Programming Language](http://fsharp.org/)
 * [ScanRat](https://github.com/pragmatrix/ScanRat) parsing expression grammar for F#
+* [.Net Core 2.X](https://www.microsoft.com/net/download/linux)
 * Faith
+
+##### P.S.: For further information about systems prerequsits check [.Net Core Guide](https://docs.microsoft.com/en-us/dotnet/core/)
+
+### Build and Run
+
+Just ```make run```. Really, simple as that.
+
+_ "Oh! On my computer it does not work!"; *Figure it out!* On our PC works just fine.

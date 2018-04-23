@@ -1,39 +1,65 @@
-﻿// Saiba mais sobre F# em http://fsharp.org
-// Veja o projeto 'F# Tutorial' para obter mais ajuda.
-module FSheila.Parser
+﻿module FSheila.Parser
 
 open ScanRat
 
 //tipo base de operações booleanas
-type boolExp = 
-            | And of boolExp * boolExp
-            | Or of boolExp * boolExp
-            | Neg of boolExp
-            | Eq of int * int 
-            | Leb of int * int
-            | Leq of int * int
-            | Geb of int * int
-            | Geq of int * int
-            | Neq of int * int
-            | Boolean of bool
+//type boolExp = 
+//            | And of boolExp * boolExp
+//            | Or of boolExp * boolExp
+//            | Neg of boolExp
+//            | Eq of int * int 
+//            | Leb of int * int
+//            | Leq of int * int
+//            | Geb of int * int
+//            | Geq of int * int
+//            | Neq of int * int
+//            | Boolean of bool
  //tipo base de expressões matemáticas
-type Exp =  
-            | Add of Exp * Exp
-            | Subtract of Exp * Exp
-            | Multiply of Exp * Exp
-            | Divide of Exp * Exp
-            | Number of int
-            | Boolexp of boolExp
+
+//type Exp =  
+//            | Add of Exp * Exp
+//            | Subtract of Exp * Exp
+//            | Multiply of Exp * Exp
+//            | Divide of Exp * Exp
+//            | And of Exp * Exp
+//            | Or of Exp * Exp
+//            | Neg of Exp
+//            | Eq of  Exp * Exp
+//            | Leb of Exp * Exp
+//            | Leq of Exp * Exp
+//            | Geb of Exp * Exp
+//            | Geq of Exp * Exp
+//            | Neq of Exp * Exp
+//            | Number of int
+//            | Boolean of bool
+//            | Id of string
 //tipo base de operações de comando
 type Cmd =
          //id é apenas uma string que representa o nome da variável
          | Var of string
-         | Assign of string * Exp
-         | Init of string * Exp
-         | If of boolExp * Cmd * Cmd
-         | Loop of boolExp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | Assign of string * Cmd
+         | Init of string * Cmd
+         | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
+         | Loop of Cmd * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
-         | Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
+         | Add of Cmd * Cmd
+         | Subtract of Cmd * Cmd
+         | Multiply of Cmd * Cmd
+         | Divide of Cmd * Cmd
+         | And of Cmd * Cmd
+         | Or of Cmd * Cmd
+         | Neg of Cmd
+         | Eq of  Cmd * Cmd
+         | Leb of Cmd * Cmd
+         | Leq of Cmd * Cmd
+         | Geb of Cmd * Cmd
+         | Geq of Cmd * Cmd
+         | Neq of Cmd * Cmd
+         | Number of int
+         | Boolean of bool
+         | Id of string
+
+         //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -43,7 +69,7 @@ type PEGParser () =
         member this.linebreak = (~~"\r\n").oneOrMore
 
         member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
-        member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
+        member this.negNumber = this.whitespace.oneOrMore.opt +. ~~"(" + ~~"-" +. this.posNumber .+ ~~")" .+ this.whitespace.oneOrMore.opt --> fun a -> -a
 
         member this.digit = oneOf "0123456789"
         member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> a
@@ -53,25 +79,28 @@ type PEGParser () =
         member this.booleanType = (this.boolTrue |- this.boolFalse)
 
         
-        member this.number = this.posNumber |- this.negNumber
+        member this.number = this.negNumber |- this.posNumber
         member this.letter = this.lLetter |- this.uLetter
         
-        member this.id = (this.letter |- this.digit).oneOrMore --> fun l -> System.String.Concat(l)
+        //correção no id: antes permitia apenas um número ser um identificador.
+        member this.id = (this.letter + (this.letter |- this.digit).oneOrMore) --> fun (a,l) -> a::l |> System.String.Concat 
 
         //operators:
         //regras de parsing de operações numéricas
+        //TODO: priorização de uma parcela da operação com ()
         member this.calcOp = 
                 let multiplicative = production "multiplicative"
                 let additive = production "additive"
         
                 let number = this.number --> Number
+                let id = this.id --> Id
                 //esse number acima é para manter todo mundo do mesmo tipo (Exp). Se não usar a regra do scanrat reclama de tipos inconsistentes na mesma regra.
 
                 let add = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"+" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt)  --> Add
                 let sub = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) --> Subtract
 
-                let multiply = (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. number .+ this.whitespace.oneOrMore.opt) --> Multiply
-                let divide = (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. number .+ this.whitespace.oneOrMore.opt) --> Divide
+                let multiply = (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Multiply
+                let divide = (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Divide
 
                 additive.rule 
                     <- add 
@@ -82,52 +111,47 @@ type PEGParser () =
                     <- multiply 
                     |- divide 
                     |- number
+                    |- id
+                    
 
                 additive
-        //regras de parsing de comparações numéricas
-        member this.eqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun (a,b) -> Eq (fst(a),b)
-        member this.lebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leb (fst(a),b)
-        member this.leqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leq (fst(a),b)
-        member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
-        member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
-        member this.neqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
-        //member this.orOp = this.whitespace.oneOrMore.opt + ~~"or" + this.whitespace.oneOrMore.opt
-        //member this.andOp = this.whitespace.oneOrMore.opt + ~~"and" + this.whitespace.oneOrMore.opt
 
         member this.boolOp =
              let andOp = production "andOp"
              let orOp = production "orOp"
 
              let boolean = this.whitespace.oneOrMore.opt +. this.booleanType --> Boolean
+             let number = this.number --> Number
+             let id = this.id --> Id
              //se não me engano and tem precedência sobre or.
              let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
              let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
-             let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean) --> Neg
+             let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean |- id) --> Neg
                         |- ( this.whitespace.oneOrMore.opt + ~~"~" + this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"(" +. (andOp |- orOp) .+ this.whitespace.oneOrMore.opt .+ ~~")")  --> Neg
 
+             let eqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun (a,b) -> Eq (fst(a),b)
+             let lebOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leb (fst(a),b)
+             let leqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leq (fst(a),b)
+             let gebOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
+             let geqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
+             let neqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
+             let compareOp = eqOp |- lebOp |- leqOp |- gebOp |- geqOp |- neqOp
+             //a princípio, não é permitido 3 + 4 < 4 * 5, por exemplo (operações matemáticas dentro de comparações numéricas).
              andOp.rule
                  <- ourAnd 
                  |- ourOr
                  |- ourNeg
-                 |- this.eqOp
-                 |- this.lebOp
-                 |- this.leqOp
-                 |- this.gebOp
-                 |- this.geqOp
-                 |- this.neqOp
+                 |- compareOp
                  |- boolean
+                 |- this.id --> Id
 
              orOp.rule
                  <- ourAnd
                  |- ourOr
                  |- ourNeg
-                 |- this.eqOp
-                 |- this.lebOp
-                 |- this.leqOp
-                 |- this.gebOp
-                 |- this.geqOp
-                 |- this.neqOp
+                 |- compareOp
                  |- boolean
+                 |- this.id --> Id
                 
              andOp
 
@@ -151,39 +175,40 @@ type PEGParser () =
                constAtr.rule
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
-
+        //TODO debugar essa porra aqui
         member this.initRule =
                 //boolexp tá bugado
-             let boole = this.boolOp --> Boolexp
-             let numExp = this.calcOp  //|- boole
+             let boole = this.boolOp //--> Boolexp
+             let numExp = this.calcOp //|- boole
              //let boolEx = 
              let initRule = production "initRule"
              let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
              let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
-             let moreAssignsBool = ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Init
-             initRule.rule
+             let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             initRule.rule //tem que ver isso aqui
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- (oneAssignExp |- oneAssignBoolex) + (moreAssigns |- moreAssignsBool)
+                <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
              initRule
          
 
         //regra do assign
         //nota: por enquanto só funciona para atribuições numéricas (inclusive atribuição de expressões numéricas). Falta eu fazer rodar pra operações booleanas tbm.
         member this.assignRule =
-             //let boole = this.boolOp
+             let boole = this.boolOp 
              let numExp = this.calcOp //|- boole
              //let boolEx = this.boolOp
              let assignRule = production "assignRule"
              let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign
+             let oneAssignBool = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. boole .+ this.whitespace.oneOrMore.opt) --> Assign
              //let oneConstBoolExp =  ~~"=" + (this.whitespace.oneOrMore + Boolexp .+ this.whitespace.oneOrMore.opt) --> Assign
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
              //NOTA2: assigns são únicos (diferentes de init). Múltiplos assigns devem fazer uso do comando de sequência.
              //let moreAssigns =  ~~";" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~":=" + (this.whitespace.oneOrMore +. numExp .+ this.whitespace.oneOrMore.opt) --> Assign //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
              assignRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
-                <- (oneAssignExp) //+ moreAssigns.oneOrMore.opt)
+                <- ( oneAssignBool |- oneAssignExp) //+ moreAssigns.oneOrMore.opt)
              assignRule
          
 
