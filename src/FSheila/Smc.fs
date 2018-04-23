@@ -10,6 +10,20 @@ let S = new Stack<Cmd>()
 //let M = new Map<string, Cmd>()
 let C = new Stack<Cmd>()
 
+//Faltando neg
+let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool = 
+    while X.Count <> 0 do
+        let op = X.Pop()
+        let d1 = S.Pop()
+        let d2 = S.Pop()
+        match (d1,d2) with
+        | Boolean d1, Boolean d2 ->
+            match op with
+            | "And" -> S.Push(Boolean(d1 && d2))
+            | "Or" -> S.Push(Boolean(d1 || d2))
+    match S.Pop() with
+    | Boolean a -> a
+
 
 let calculator (X: Stack<string>) (S: Stack<Cmd>) :int = 
     while X.Count <> 0 do
@@ -27,6 +41,7 @@ let calculator (X: Stack<string>) (S: Stack<Cmd>) :int =
     | Number a ->
         a
  
+ //Faltando <>
 let rec stackator (exp) =
     match exp with
     | Add (a, b) -> X.Push("Add"); match (a,b) with
@@ -62,8 +77,6 @@ let rec stackator (exp) =
     | Neg a -> X.Push("Neg"); match a with 
                               | Boolean x -> S.Push(Boolean x)
                               | d -> stackator(d)
-    //| Number a ->  S.Push(Number a)
-    //| Boolean a -> S.Push(Boolean a)
 
 let getFromParser (exp) =
     match exp with
