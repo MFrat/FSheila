@@ -38,8 +38,16 @@ let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool =
     | Boolean a -> a
     | Id a -> match M.Item(a) with //pega o valor na memória. Pela construção do parser, por mais que o F# reclame que não abrange todos os tipos que Cmd pode assumir, aqui só é esperado sempre um boolean.
               | Boolean x -> x
-       
 
+//let rec solveSimpleCalcExp (op:string) (d1: Cmd) (d2: Cmd) =   ideia pra uma caculadora unfiicada que possa ser reutilizada.
+//    match (d1,d2) with
+//    | Number a, Number b ->
+//        match op with
+//        | "Add"  -> (Number (a+b))
+//        | "Subtract" -> (Number( a-b))
+//        | "Multiply" -> (Number( a*b))
+//        | "Divide" -> (Number(int(a/b)))
+    
 
 let calculator (X: Stack<string>) (S: Stack<Cmd>) :int = 
     while X.Count <> 0 do
@@ -62,6 +70,10 @@ let calculator (X: Stack<string>) (S: Stack<Cmd>) :int =
  //Faltando <>
 let rec stackator (exp) =
     match exp with
+    //essas três primeiras representam o "caso base" de algumas regras.
+    | Number a -> S.Push( Number a)
+    | Boolean b -> S.Push (Boolean b)
+    | Id x -> S.Push (Id x)
     | Add (a, b) -> X.Push("Add"); match (a,b) with
                                     | Number x, Number y -> S.Push(Number x); S.Push(Number y)
                                     | Number x , d -> S.Push(Number x); stackator d; 
@@ -106,8 +118,21 @@ let rec stackator (exp) =
     | Geb (a,b) -> X.Push("Geb"); S.Push(b); S.Push(a);
     | Geq (a,b) -> X.Push("Geq"); S.Push(b); S.Push(a);
     | Neq (a,b) -> X.Push("Neq"); S.Push(b); S.Push(a);
-
     //comandos TODO Assign, While e If.
+    | Assign (a,b) -> X.Push("Assign"); S.Push(Id a); stackator b
+    | If (a,b,c) -> X.Push("If") ; S.Push(c); S.Push(b); S.Push(a) //IDEIA: segundo plotkin, empulha os comandos todos na pilha S. Se a for verdade, executar b e desempilhar c, se a não for verdade, desempilha b e executa c.
+    | Loop (a,b) -> X.Push("Loop") ; S.Push(a); S.Push(b) //a semántica das regras de eliminação E1 e E2 do plotkin virão das calculadoras
+    //real if e while não sei fazer direito não.
+
+//let commandCalculator  (X: Stack<string>) (S: Stack<Cmd>) =
+//    while X.Count <> 0 do
+//       let op = X.Pop()
+//        let d1 = S.Pop()
+//        let d2 = S.Peek() //famosa gambiarra
+//        match op with
+//            | "Assign" -> match (d1,d2) with //queria reutilizar uma possivel calculadora, mas vamos ver:
+//                         | Id a, k -> match k with //BUGADO: necessitamos de uma forma de resolver k antes de fazer M.Item(a,k), ou seja, atribuir k ao valor "a" na memória M.                                     
+        
 
 let getFromParser (exp) =
     match exp with
