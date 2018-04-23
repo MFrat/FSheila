@@ -4,11 +4,13 @@ open ScanRat
 open System
 
 open FSheila
+open Utils
 open Parser
 open Smc
       
 [<EntryPoint>]
 let main argv = 
+    printIntro
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
