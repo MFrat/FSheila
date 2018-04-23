@@ -64,7 +64,7 @@ let main argv =
     printfn "S = %A" (S)
     printfn "C = %A" (C)
     printfn "Result = %A" (calculator X S)
-    //TESTES de SMC daqui para baixo:
+    //TESTES de SMC daqui para baixo: 
     //let x = new SMC()
     let get exp = 
       match exp with
