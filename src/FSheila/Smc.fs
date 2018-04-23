@@ -11,7 +11,7 @@ let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
 
-//Faltando neg
+//Ta bugado. 3<>4 and 2<2 esse caso buga pq mistura number com bool na pilha S
 let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool = 
     while X.Count <> 0 do
         let op = X.Pop()
@@ -25,6 +25,15 @@ let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool =
             match op with
             | "And" -> S.Push(Boolean(d1 && d2))
             | "Or" -> S.Push(Boolean(d1 || d2))
+        | Number n1, Number n2 -> //Operacoes bool com numeros
+            match op with
+            | "Eq" -> S.Push(Boolean(n1 = n2))
+            | "Neq" -> S.Push(Boolean(n1 <> n2))
+            | "Leb" -> S.Push(Boolean(n1 < n2))
+            | "Leq" -> S.Push(Boolean(n1 <= n2))
+            | "Geb" -> S.Push(Boolean(n1 > n2))
+            | "Geq" -> S.Push(Boolean(n1 >= n2))
+
     match S.Pop() with
     | Boolean a -> a
     | Id a -> match M.Item(a) with //pega o valor na memória. Pela construção do parser, por mais que o F# reclame que não abrange todos os tipos que Cmd pode assumir, aqui só é esperado sempre um boolean.
@@ -92,11 +101,11 @@ let rec stackator (exp) =
                                //| Number a, Number b -> S.Push(Number b); S.Push(Number a); --> NOTA: esse casamento de padrão não parece se encaixar aqui. A idéia é resolver caso sejam IDs também (indo na memória e pegando o valor correspondente à
                                //id. O melhor jeito que eu vejo de fazer isso é com um dicionário. Essa operação pode ser feita no calculadora de Bool
                                //| Id a, Id b -> S.Push(Id b);
-    | Leb (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
-    | Leq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
-    | Geb (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
-    | Geq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
-    | Neq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+    | Leb (a,b) -> X.Push("Leb"); S.Push(b); S.Push(a);
+    | Leq (a,b) -> X.Push("Leq"); S.Push(b); S.Push(a);
+    | Geb (a,b) -> X.Push("Geb"); S.Push(b); S.Push(a);
+    | Geq (a,b) -> X.Push("Geq"); S.Push(b); S.Push(a);
+    | Neq (a,b) -> X.Push("Neq"); S.Push(b); S.Push(a);
 
     //comandos TODO Assign, While e If.
 
