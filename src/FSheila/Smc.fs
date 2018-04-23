@@ -10,13 +10,22 @@ let S = new Stack<Cmd>()
 //let M = new Map<string, Cmd>()
 let C = new Stack<Cmd>()
 
-(*
-let calculator = 
+
+let calculator (X: Stack<string>) (S: Stack<Cmd>) :int = 
     while X.Count <> 0 do
         let op = X.Pop()
-        match op with
-        | "Add" -> 
- *)
+        let d1 = S.Pop()
+        let d2 = S.Pop()
+        match (d1,d2) with
+        | Number d1, Number d2 ->
+            match op with
+            | "Add" -> S.Push(Number(d1 + d2))
+            | "Subtract" -> S.Push(Number(d1 - d2))
+            | "Multiply" -> S.Push(Number(d1 * d2))
+            | "Divide" -> S.Push(Number(int(d1 / d2)))
+    match S.Pop() with
+    | Number a ->
+        a
  
 let rec stackator (exp) =
     match exp with
