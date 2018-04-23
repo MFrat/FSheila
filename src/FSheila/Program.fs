@@ -12,7 +12,7 @@ let main argv =
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
-    let teste = parse testGrammar.boolOp "true and 3==3 and true and false";
+    let teste = parse testGrammar.boolOp "true and 3==3 and true and false"
     let teste = parse testGrammar.boolOp "~(true and ~false)"
     //let teste = parse testGrammar.boolOp "~(true and ~(3<>4))"
     //let teste2 = parse testGrammar.boolOp "true and false or false and true"
@@ -55,24 +55,18 @@ let main argv =
 
 
     //et teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
-    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
-    let teste = parse testGrammar.boolOp "false or true and false or true"
-    //let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
-    //let smc = new SMC()
+    //let teste = parse testGrammar.boolOp "false or true and false or true"
+    //let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 3 + 3"
+    let teste = parse testGrammar.boolOp "false or false or false or false or true"
+    
+    //Teste parser + smc
     getFromParser teste
     printfn "X = %A" (X)
     printfn "S = %A" (S)
     printfn "C = %A" (C)
     printfn "Result = %A" (calculatorBool X S)
-    //TESTES de SMC daqui para baixo:
-    //let x = new SMC()
-    let get exp = 
-      match exp with
-        | Success s ->  s.value
-        | Failure f -> failwith "fail"
-    //let ae = valueOf teste
-    //printfn "%A" (get teste)
+
     let sheila = Console.ReadLine()
     printfn "%A" sheila
-    //printfn "%A" argv
+    
     0 // retornar um código de saída inteiro
