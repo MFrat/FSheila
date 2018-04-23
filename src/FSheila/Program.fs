@@ -57,7 +57,7 @@ let main argv =
     //et teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
     //let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
-    let teste = parse testGrammar.boolOp "3==3 and true"
+    let teste = parse testGrammar.boolOp "3<3 and true and false"
     //let smc = new SMC()
     getFromParser teste
     printfn "X = %A" (X)

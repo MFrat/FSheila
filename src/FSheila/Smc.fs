@@ -13,21 +13,6 @@ let C = new Stack<Cmd>()
 
 //Ta bugado. 3<>4 and 2<2 esse caso buga pq mistura number com bool na pilha S
 let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool = 
-    for i in 1 .. X.Count do
-        let fuck = X.Pop()
-        match fuck with
-        | "Eq" -> S.Push(Boolean(S.Pop() = S.Pop()))
-        | "Neq" -> S.Push(Boolean(S.Pop() <> S.Pop()))
-        | "Leb" -> S.Push(Boolean(S.Pop() < S.Pop()))
-        | "Leq" -> S.Push(Boolean(S.Pop() <= S.Pop()))
-        | "Geb" -> S.Push(Boolean(S.Pop() > S.Pop()))
-        | "Geq" -> S.Push(Boolean(S.Pop() >= S.Pop()))
-        | _ -> X.Push(fuck)
-
-
-    printfn "VAITOMARNOCUPORRA X = %A" (X)
-    printfn "VEM S = %A" (S)
-
     while X.Count <> 0 do
         let op = X.Pop()
         let d1 = S.Pop()
