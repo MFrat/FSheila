@@ -69,7 +69,7 @@ type PEGParser () =
         member this.linebreak = (~~"\r\n").oneOrMore
 
         member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
-        member this.negNumber = ~~"-" + this.posNumber --> fun a -> -snd(a)
+        member this.negNumber = this.whitespace.oneOrMore.opt +. ~~"(" + ~~"-" +. this.posNumber .+ ~~")" .+ this.whitespace.oneOrMore.opt --> fun a -> -a
 
         member this.digit = oneOf "0123456789"
         member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> a
@@ -79,7 +79,7 @@ type PEGParser () =
         member this.booleanType = (this.boolTrue |- this.boolFalse)
 
         
-        member this.number = this.posNumber |- this.negNumber
+        member this.number = this.negNumber |- this.posNumber
         member this.letter = this.lLetter |- this.uLetter
         
         //correção no id: antes permitia apenas um número ser um identificador.
@@ -87,6 +87,7 @@ type PEGParser () =
 
         //operators:
         //regras de parsing de operações numéricas
+        //TODO: priorização de uma parcela da operação com ()
         member this.calcOp = 
                 let multiplicative = production "multiplicative"
                 let additive = production "additive"
@@ -114,16 +115,6 @@ type PEGParser () =
                     
 
                 additive
-        //regras de parsing de comparações numéricas
-        //member this.eqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"==" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun (a,b) -> Eq (fst(a),b)
-        //member this.lebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leb (fst(a),b)
-        //member this.leqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<=" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Leq (fst(a),b)
-        //member this.gebOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
-        //member this.geqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
-        //member this.neqOp = (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. this.number .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
-        //member this.compareOp = this.eqOp |- this.lebOp |- this.leqOp |-this.gebOp |- this.neqOp
-        //member this.orOp = this.whitespace.oneOrMore.opt + ~~"or" + this.whitespace.oneOrMore.opt
-        //member this.andOp = this.whitespace.oneOrMore.opt + ~~"and" + this.whitespace.oneOrMore.opt
 
         member this.boolOp =
              let andOp = production "andOp"
@@ -144,8 +135,8 @@ type PEGParser () =
              let gebOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~">" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geb (fst(a),b)
              let geqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"=>" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Geq (fst(a),b)
              let neqOp = (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) + ~~"<>" + (this.whitespace.oneOrMore.opt +. ( number |- id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Neq (fst(a),b)
-             let compareOp = eqOp |- lebOp |- leqOp |- gebOp |- neqOp
-
+             let compareOp = eqOp |- lebOp |- leqOp |- gebOp |- geqOp |- neqOp
+             //a princípio, não é permitido 3 + 4 < 4 * 5, por exemplo (operações matemáticas dentro de comparações numéricas).
              andOp.rule
                  <- ourAnd 
                  |- ourOr

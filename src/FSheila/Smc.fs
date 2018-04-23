@@ -7,8 +7,30 @@ open System.Collections.Generic //daqui vem o dicionario
 
 let X = new Stack<string>()
 let S = new Stack<Cmd>()
-//let M = new Map<string, Cmd>()
+let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
+
+
+
+//Faltando neg
+let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool = 
+    while X.Count <> 0 do
+        let op = X.Pop()
+        let d1 = S.Pop()
+        //match op with
+        //| "Neg" -> match d1 with 
+        //           | Boolean a -> not a under construction
+        let d2 = S.Pop()
+        match (d1,d2) with
+        | Boolean d1, Boolean d2 ->
+            match op with
+            | "And" -> S.Push(Boolean(d1 && d2))
+            | "Or" -> S.Push(Boolean(d1 || d2))
+    match S.Pop() with
+    | Boolean a -> a
+    | Id a -> match M.Item(a) with //pega o valor na memória. Pela construção do parser, por mais que o F# reclame que não abrange todos os tipos que Cmd pode assumir, aqui só é esperado sempre um boolean.
+              | Boolean x -> x
+       
 
 
 let calculator (X: Stack<string>) (S: Stack<Cmd>) :int = 
@@ -26,6 +48,8 @@ let calculator (X: Stack<string>) (S: Stack<Cmd>) :int =
     match S.Pop() with
     | Number a ->
         a
+    | Id a -> match M.Item(a) with
+              | Number a -> a
  
 let rec stackator (exp) =
     match exp with
@@ -35,7 +59,7 @@ let rec stackator (exp) =
                                    | d , Number y -> S.Push (Number y); stackator d
                                    | v , k -> stackator (v); stackator (k)
     | Subtract (a, b) -> X.Push("Subtract"); match (a,b) with
-                                   | Number x, Number y -> S.Push(Number x); S.Push(Number y)
+                                   | Number x, Number y -> S.Push(Number y); S.Push(Number x); //nota: tanto na divisão quanto na subtração a ordem dos operandos devem ser mantidas
                                    | Number x , d -> S.Push(Number x); stackator d; 
                                    | d , Number y ->  S.Push (Number y); stackator d
                                    | v , k -> stackator (v); stackator (k)// stackator a; stackator b
@@ -45,7 +69,7 @@ let rec stackator (exp) =
                                    | d , Number y ->  S.Push (Number y); stackator d
                                    | v , k -> stackator (v); stackator (k) //stackator a; stackator b
     | Divide (a, b) -> X.Push("Divide"); match (a,b) with
-                                   | Number x, Number y -> S.Push(Number x); S.Push(Number y)
+                                   | Number x, Number y ->  S.Push(Number y);S.Push(Number x);
                                    | Number x , d -> S.Push(Number x); stackator d; 
                                    | d , Number y ->  S.Push (Number y); stackator d
                                    | v , k -> stackator (v); stackator (k) //stackator a; stackator b
@@ -62,8 +86,19 @@ let rec stackator (exp) =
     | Neg a -> X.Push("Neg"); match a with 
                               | Boolean x -> S.Push(Boolean x)
                               | d -> stackator(d)
-    //| Number a ->  S.Push(Number a)
-    //| Boolean a -> S.Push(Boolean a)
+    //Comparaçõs booleanas
+    //a ou b aqui só podem ser números ou o id de alguma variável: tem que separar em 2 (ou 4) casos distintos: se for numeros, ja resolve, se tiver um id, pega o valor na memória pra resovler
+    | Eq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a) //match a,b with
+                               //| Number a, Number b -> S.Push(Number b); S.Push(Number a); --> NOTA: esse casamento de padrão não parece se encaixar aqui. A idéia é resolver caso sejam IDs também (indo na memória e pegando o valor correspondente à
+                               //id. O melhor jeito que eu vejo de fazer isso é com um dicionário. Essa operação pode ser feita no calculadora de Bool
+                               //| Id a, Id b -> S.Push(Id b);
+    | Leb (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+    | Leq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+    | Geb (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+    | Geq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+    | Neq (a,b) -> X.Push("Eq"); S.Push(b); S.Push(a);
+
+    //comandos TODO Assign, While e If.
 
 let getFromParser (exp) =
     match exp with
