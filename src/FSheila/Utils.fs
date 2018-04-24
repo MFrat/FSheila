@@ -8,3 +8,8 @@ let printIntro =
     printfn " | |       ____)  | | |  | | |  __/ | | | | | (_| | "
     printfn " |_|      |______/  |_|  |_|  \___| |_| |_|  \__,_| "
     printfn "                                                    "
+
+let printStacks X S C =
+    printfn "X = %A" (X)
+    printfn "S = %A" (S)
+    printfn "C = %A" (C)

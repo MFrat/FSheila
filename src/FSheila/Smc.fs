@@ -2,6 +2,7 @@
 
 open ScanRat
 open FSheila
+open Utils
 open Parser
 open System.Collections.Generic
 
@@ -51,6 +52,7 @@ let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool =
 
 let calculator (X: Stack<string>) (S: Stack<Cmd>) :int = 
     while X.Count <> 0 do
+        printStacks X S C
         let op = X.Pop()
         let d1 = S.Pop()
         let d2 = S.Pop()
