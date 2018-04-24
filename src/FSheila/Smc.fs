@@ -12,6 +12,27 @@ let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
 
+
+//o comportamento de calcLocal foi embutido em calculator.
+let calcLocal (op:string) (cmd1 : Cmd) (cmd2: Cmd) =
+    match (cmd1,cmd2) with
+    | Number d1, Number d2 ->
+            match op with
+            | "Add" -> S.Push(Number(d1 + d2))
+            | "Subtract" -> S.Push(Number(d1 - d2))
+            | "Multiply" -> S.Push(Number(d1 * d2))
+            | "Divide" -> S.Push(Number(int(d1 / d2)))
+            | "Eq" -> S.Push(Boolean(d1 = d2))
+            | "Neq" -> S.Push(Boolean(d1 <> d2))
+            | "Leb" -> S.Push(Boolean(d1 < d2))
+            | "Leq" -> S.Push(Boolean(d1 <= d2))
+            | "Geb" -> S.Push(Boolean(d1 > d2))
+            | "Geq" -> S.Push(Boolean(d1 >= d2))
+    | Boolean d1, Boolean d2 ->
+            match op with
+            | "And" -> S.Push(Boolean(d1 && d2))
+            | "Or" -> S.Push(Boolean(d1 || d2))
+
 //Ta bugado. 3<>4 and 2<2 esse caso buga pq mistura number com bool na pilha S
 let calculatorBool (X: Stack<string>) (S: Stack<Cmd>) :bool = 
     while X.Count <> 0 do
@@ -63,11 +84,22 @@ let calculator (X: Stack<string>) (S: Stack<Cmd>) :int =
             | "Subtract" -> S.Push(Number(d1 - d2))
             | "Multiply" -> S.Push(Number(d1 * d2))
             | "Divide" -> S.Push(Number(int(d1 / d2)))
+            | "Eq" -> S.Push(Boolean(d1 = d2))
+            | "Neq" -> S.Push(Boolean(d1 <> d2))
+            | "Leb" -> S.Push(Boolean(d1 < d2))
+            | "Leq" -> S.Push(Boolean(d1 <= d2))
+            | "Geb" -> S.Push(Boolean(d1 > d2))
+            | "Geq" -> S.Push(Boolean(d1 >= d2))
+        | Boolean d1, Boolean d2 ->
+            match op with
+            | "And" -> S.Push(Boolean(d1 && d2))
+            | "Or" -> S.Push(Boolean(d1 || d2))
     match S.Pop() with
     | Number a ->
         a
     | Id a -> match M.Item(a) with
               | Number a -> a
+              //aqui fudeu o cu de creuza. numa unificada não rola retornar o bool puro.
  
  //Faltando <>
 let rec stackator (exp) =
@@ -75,7 +107,7 @@ let rec stackator (exp) =
     //essas três primeiras representam o "caso base" de algumas regras.
     | Number a -> S.Push( Number a)
     | Boolean b -> S.Push (Boolean b)
-    | Id x -> S.Push (Id x)
+    | Id x -> S.Push (M.Item(x)) //quando stackator acerta um Id puro, significa que alguém está referenciando essa variável (ex a := sheila ou sheila + sheila2 - 5). Nesse caso, o que deve ser empilhado é o valor referente ao id na memória.
     | Add (a, b) -> X.Push("Add"); match (a,b) with
                                     | Number x, Number y -> S.Push(Number x); S.Push(Number y)
                                     | Number x , d -> S.Push(Number x); stackator d; 
@@ -90,12 +122,12 @@ let rec stackator (exp) =
                                     | Number x, Number y -> S.Push(Number x); S.Push(Number y)
                                     | Number x , d -> S.Push(Number x); stackator d; 
                                     | d , Number y ->  S.Push (Number y); stackator d
-                                    | v , k -> stackator (v); stackator (k) //stackator a; stackator b
+                                    | v , k -> stackator(k); stackator(v) //stackator a; stackator b
     | Divide (a, b) -> X.Push("Divide"); match (a,b) with
                                    | Number x, Number y ->  S.Push(Number y);S.Push(Number x);
                                    | Number x , d -> S.Push(Number x); stackator d; 
                                    | d , Number y ->  S.Push (Number y); stackator d
-                                   | v , k -> stackator (v); stackator (k) //stackator a; stackator b
+                                   | v , k -> stackator (k); stackator (v)  //stackator a; stackator b
     | And (a, b) -> X.Push("And"); match a,b with
                                     | Boolean x, Boolean y -> S.Push(Boolean x); S.Push(Boolean y)
                                     | Boolean x , d -> S.Push(Boolean x); stackator d; 
