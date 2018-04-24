@@ -69,7 +69,8 @@ type PEGParser () =
         member this.linebreak = (~~"\r\n").oneOrMore
 
         member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
-        member this.negNumber = this.whitespace.oneOrMore.opt +. ~~"(" + ~~"-" +. this.posNumber .+ ~~")" .+ this.whitespace.oneOrMore.opt --> fun a -> -a
+        member this.negNumber = this.whitespace.oneOrMore.opt +. ~~"(" + ~~"-" +. this.posNumber .+ ~~")" .+ this.whitespace.oneOrMore.opt 
+                                |- this.whitespace.oneOrMore.opt +. ~~"-" +. this.posNumber .+ this.whitespace.oneOrMore.opt--> fun a -> -a
 
         member this.digit = oneOf "0123456789"
         member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> a
