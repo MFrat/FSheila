@@ -165,10 +165,11 @@ let rec stackator (exp) =
 //        let d2 = S.Peek() //famosa gambiarra
 //        match op with
 //            | "Assign" -> match (d1,d2) with //queria reutilizar uma possivel calculadora, mas vamos ver:
-//                         | Id a, k -> match k with //BUGADO: necessitamos de uma forma de resolver k antes de fazer M.Item(a,k), ou seja, atribuir k ao valor "a" na memória M.                                     
-        
+//                         | Id a, k -> match k with //BUGADO: necessitamos de uma forma de resolver k antes de fazer M.Item(a,k), ou seja, atribuir k ao valor "a" na memória M.                                        
+
+exception Err of string
 
 let getFromParser (exp) =
     match exp with
     | Success r -> printfn "Input = %A" (r.value); stackator r.value
-    | Failure _ -> failwith "Parsing falhou!"
+    | Failure _ -> raise (Err("message"))//failwith "Parsing falhou!"

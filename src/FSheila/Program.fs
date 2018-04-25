@@ -60,11 +60,25 @@ let main argv =
     let teste = parse testGrammar.calcOp "(-21) + 5555 + 3 + 4 * 666 /   5"
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
+    let supercalc input =
+        try
+            try 
+                let teste = parse testGrammar.boolOp input
+                getFromParser teste
+                printfn "Result = %A" (calculator X S)
+            finally
+                let teste = parse testGrammar.calcOp input
+                getFromParser teste
+                printfn "Result = %A" (calculator X S)
+        with
+        | _ -> ()
+
+    supercalc "6 / 2 * 3 - 4 * 1 - 5"
     //let teste = parse testGrammar.boolOp "3<3 and true and false"
     //let smc = new SMC()
-    getFromParser teste
+    //getFromParser teste
     //printStacks X S C
-    printfn "Result = %A" (calculator X S)
+    //printfn "Result = %A" (calculator X S)
     //TESTES de SMC daqui para baixo: 
     //let x = new SMC()
     let get exp = 
