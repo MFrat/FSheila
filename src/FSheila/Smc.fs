@@ -115,7 +115,7 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
                                         | Number x, Number y -> S.Push(Number (x + y))
                             | "Divide" -> match (S.Pop(), S.Pop()) with 
                                         | Number x, Number y -> S.Push(Number (x / y))
-            | Number x -> S.Push(Number x); new_sum S C
+            | Number x -> new_sum S C; S.Push(Number x)
 
  //Faltando <>
 let rec stackator (exp) =

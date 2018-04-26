@@ -65,7 +65,7 @@ let main argv =
     let teste = parse testGrammar.calcOp "(-21) + 5555 + 3 + 4 * 666 /   5"
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
-    let fact = parse testGrammar.generalRule "1 + 2 + 3 + 4"
+    let fact = parse testGrammar.generalRule "6 / 2 + 121 / 11 + 4"
     //supercalc "6 / 2 * 3 - 4 * 1 - 5"
     //let teste = parse testGrammar.boolOp "3<3 and true and false"
     //let smc = new SMC()
