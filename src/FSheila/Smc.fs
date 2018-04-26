@@ -109,10 +109,16 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
         match op with
             | Sheila a -> match a with
                             | "Add" -> new_sum S C; C.Push(XSheila "Add"); new_sum S C
+                            | "Subtract" -> new_sum S C; C.Push(XSheila "Subtract"); new_sum S C
+                            | "Multiply" -> new_sum S C; C.Push(XSheila "Multiply"); new_sum S C
                             | "Divide" -> new_sum S C; C.Push(XSheila "Divide"); new_sum S C
             | XSheila a -> match a with
                             | "Add" -> match (S.Pop(), S.Pop()) with 
                                         | Number x, Number y -> S.Push(Number (x + y))
+                            | "Subtract" -> match (S.Pop(), S.Pop()) with 
+                                        | Number x, Number y -> S.Push(Number (x - y))
+                            | "Multiply" -> match (S.Pop(), S.Pop()) with 
+                                        | Number x, Number y -> S.Push(Number (x * y))
                             | "Divide" -> match (S.Pop(), S.Pop()) with 
                                         | Number x, Number y -> S.Push(Number (x / y))
             | Number x -> new_sum S C; S.Push(Number x)
@@ -125,16 +131,20 @@ let rec stackator (exp) =
     | Boolean b -> S.Push (Boolean b)
     | Id x -> S.Push (M.Item(x)) //quando stackator acerta um Id puro, significa que alguém está referenciando essa variável (ex a := sheila ou sheila + sheila2 - 5). Nesse caso, o que deve ser empilhado é o valor referente ao id na memória.
     | Add (a, b) -> match (a,b) with
-                    (*
-                    | Number x, Number y -> X.Push(String.concat " " ["Number"; y.ToString()]); X.Push(String.concat " " ["Number"; x.ToString()]); X.Push("Add")
-                    | Number x , d -> stackator d; X.Push(String.concat " " ["Number"; x.ToString()]); X.Push("Add")
-                    | d , Number y -> X.Push(String.concat " " ["Number"; y.ToString()]); stackator d; X.Push("Add")
-                    | v , k -> stackator (v); stackator (k); X.Push("Add")
-                    *)
                     | Number x, Number y -> C.Push(Number y); C.Push(Number x); C.Push(Sheila "Add")
                     | Number x , d -> stackator d; C.Push(Number x); C.Push(Sheila "Add")
                     | d , Number y ->  C.Push(Number y); stackator d; C.Push(Sheila "Add")
                     | v , k -> stackator (v); stackator (k); C.Push(Sheila "Add")
+    | Subtract (a, b) -> match (a,b) with
+                    | Number x, Number y -> C.Push(Number y); C.Push(Number x); C.Push(Sheila "Subtract")
+                    | Number x , d -> stackator d; C.Push(Number x); C.Push(Sheila "Subtract")
+                    | d , Number y ->  C.Push(Number y); stackator d; C.Push(Sheila "Subtract")
+                    | v , k -> stackator (v); stackator (k); C.Push(Sheila "Subtract")
+    | Multiply (a, b) -> match (a,b) with
+                    | Number x, Number y -> C.Push(Number y); C.Push(Number x); C.Push(Sheila "Multiply")
+                    | Number x , d -> stackator d; C.Push(Number x); C.Push(Sheila "Multiply")
+                    | d , Number y ->  C.Push(Number y); stackator d; C.Push(Sheila "Multiply")
+                    | v , k -> stackator (v); stackator (k); C.Push(Sheila "Multiply")
     | Divide (a, b) -> match (a,b) with
                     | Number x, Number y -> C.Push(Number y); C.Push(Number x); C.Push(Sheila "Divide")
                     | Number x , d -> stackator d; C.Push(Number x); C.Push(Sheila "Divide")
