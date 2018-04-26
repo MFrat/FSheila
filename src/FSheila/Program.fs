@@ -65,22 +65,19 @@ let main argv =
     let teste = parse testGrammar.calcOp "(-21) + 5555 + 3 + 4 * 666 /   5"
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
-
+    let fact = parse testGrammar.generalRule "1 + 2 + 3 + 4"
     //supercalc "6 / 2 * 3 - 4 * 1 - 5"
     //let teste = parse testGrammar.boolOp "3<3 and true and false"
     //let smc = new SMC()
-    printfn "%A" ( fact)
-    printStacks X S C
+    //printfn "%A" ( fact)
+    getFromParser fact
+    new_sum S C
+    //printStacks X S C
     //printfn "Result = %A" (calculator X S)
+    
     //TESTES de SMC daqui para baixo: 
-    //let x = new SMC()
-    let get exp = 
-      match exp with
-        | Success s ->  s.value
-        | Failure f -> failwith "fail"
-    //let ae = valueOf teste
-    //printfn "%A" (get teste)
+    
+
     let sheila = Console.ReadLine()
     printfn "%A" sheila
-    //printfn "%A" argv
-    0 // retornar um código de saída inteiro
+    0

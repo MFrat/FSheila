@@ -26,6 +26,8 @@ type Cmd =
          | Number of int
          | Boolean of bool
          | Id of string
+         | Sheila of string
+         | XSheila of string
 
          //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
@@ -214,4 +216,4 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
 
-        member this.generalRule = this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule |- this.assignRule
+        member this.generalRule = this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule |- this.assignRule |- this.calcOp
