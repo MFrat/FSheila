@@ -71,7 +71,7 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
                                         | Id x, Id y -> (M.Add(x,M.Item(y)))
             | Number x -> new_sum S C; S.Push(Number x)
             | Boolean x -> new_sum S C; S.Push(Boolean x)
-            | Id x -> new_sum S C;  printf "%A" x; S.Push (Id x)
+            | Id x -> new_sum S C; S.Push (Id x)
             
 let rec stackator (exp) =
     match exp with
