@@ -147,7 +147,6 @@ type PEGParser () =
                constAtr.rule
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
-        //TODO debugar essa porra aqui
         member this.initRule =
                 //boolexp tá bugado
              let boole = this.boolOp //--> Boolexp
