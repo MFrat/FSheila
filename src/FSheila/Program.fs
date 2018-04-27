@@ -39,10 +39,8 @@ let main argv =
     //let teste2 = parse testGrammar.ifRule "if 7 <= 9 { 
     //                                          sheila := 3;
     //                                          sheila := 4 + 5 } else sheila := 4"
-    //let teste2 = parse testGrammar.ifRule "if 7 <= 9 sheila := 5/2 + 4 else { 
-    //                                                   sheila := 4;
-    //                                                    spacer := 69;
-    //                                                   star := 4*78/9-6}"
+    let fact = parse testGrammar.generalRule "if 7 <= 9 sheila := 5/2 + 4 else { 
+                                                       star := 4*78/9-6}"
     //let fact = parse testGrammar.generalRule "if 7 <= 9 {
     //                                       sheila := 444;
     //                                       stack := 685/5;
@@ -53,7 +51,7 @@ let main argv =
     //                                                   star := 4*78/9-6}"
     //chamar a regra GeneralRule como acima
     //let fact = parse testGrammar.assignRule "sheila := x * aaaa"
-    let fact = parse testGrammar.generalRule "while ~(x == 0) {
+    let fact1 = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
                                            x := x - 1 }"
     //let fact = parse testGrammar.assignRule "y := x + 6"
@@ -65,14 +63,14 @@ let main argv =
     let teste = parse testGrammar.calcOp "(-21) + 5555 + 3 + 4 * 666 /   5"
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
-    let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
-    let fact = parse testGrammar.generalRule "3 <= 4 == false"
+    //let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
+    //let fact = parse testGrammar.generalRule "3 <= 4 == false"
     //supercalc "6 / 2 * 3 - 4 * 1 - 5"
     //let teste = parse testGrammar.boolOp "3<3 and true and false"
     //let smc = new SMC()
     //printfn "%A" ( fact)
     getFromParser fact
-    new_sum S C
+    //new_sum S C
     printStacks S C
     //printStacks X S C
     //printfn "Result = %A" (calculator X S)
