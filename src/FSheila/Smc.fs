@@ -8,11 +8,12 @@ open System.Collections.Generic
 
 let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
+M.Add("sheila",Number 3)
 let C = new Stack<Cmd>()
 
 let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
-        printStacks S C
+        printSMC S M C
         let op = C.Pop()
         match op with
             | Sheila a -> match a with
@@ -29,9 +30,12 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
                             | "Leq" -> new_sum S C; C.Push(XSheila "Leq"); new_sum S C
                             | "Geb" -> new_sum S C; C.Push(XSheila "Geb"); new_sum S C
                             | "Geq" -> new_sum S C; C.Push(XSheila "Geq"); new_sum S C
+                            | "Assign" -> new_sum S C; C.Push(XSheila "Assign"); new_sum S C
             | XSheila a -> match a with
                             | "Add" -> match S.Pop(), S.Pop() with 
                                         | Number x, Number y -> S.Push(Number (x + y))
+                                        | Id x, Number y -> match M.Item(x) with
+                                                            | Number c -> S.Push(Number(y + c))
                             | "Subtract" -> match S.Pop(), S.Pop() with 
                                         | Number x, Number y -> S.Push(Number (x - y))
                             | "Multiply" -> match S.Pop(), S.Pop() with 
@@ -58,8 +62,16 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
                                         | Boolean x, Boolean y -> S.Push(Boolean(x > y))
                             | "Geq" -> match S.Pop(), S.Pop() with 
                                         | Boolean x, Boolean y -> S.Push(Boolean(x >= y))
+                            | "Assign" -> match (S.Pop(), S.Pop()) with
+                                        | Id x, Number y -> try
+                                                             (M.Add(x,Number y))
+                                                            with
+                                                            | :? System.ArgumentException -> M.Remove(x); M.Add(x,Number y)
+                                        | Id x, Boolean y -> (M.Add(x,Boolean y))
+                                        | Id x, Id y -> (M.Add(x,M.Item(y)))
             | Number x -> new_sum S C; S.Push(Number x)
             | Boolean x -> new_sum S C; S.Push(Boolean x)
+            | Id x -> new_sum S C;  printf "%A" x; S.Push (Id x)
             
 let rec stackator (exp) =
     match exp with
@@ -134,13 +146,13 @@ let rec stackator (exp) =
                     | Number x -> C.Push(Number(x)); C.Push(Id(a)); C.Push(Sheila "Assign")
                     | Boolean x ->  C.Push(Boolean(x)); C.Push(Id(a)); C.Push(Sheila "Assign")
                     | Id x ->  C.Push(Id(x)); C.Push(Id(a)); C.Push(Sheila "Assign")
-                    | x -> stackator(x) ; C.Push(Sheila "Assign")
+                    | x -> stackator(x); C.Push(Id(a)) ; C.Push(Sheila "Assign")
     | If (a, b, c) -> C.Push(c); C.Push(b); C.Push(a); C.Push(Sheila "If")
-    | _ -> failwith "deu ruim"
+    //| _ -> failwith "deu ruim"
 
     
     (*
-    //comandos TODO Assign, While e If.
+    //comandos TODO While e If.
     | Assign (a,b) -> X.Push("Assign"); S.Push(Id a); stackator b
     | If (a,b,c) -> X.Push("If") ; S.Push(c); S.Push(b); S.Push(a) //IDEIA: segundo plotkin, empulha os comandos todos na pilha S. Se a for verdade, executar b e desempilhar c, se a não for verdade, desempilha b e executa c.
     | Loop (a,b) -> X.Push("Loop") ; S.Push(a); S.Push(b) //a semántica das regras de eliminação E1 e E2 do plotkin virão das calculadoras

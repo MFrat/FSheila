@@ -64,14 +64,16 @@ let main argv =
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
     //let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
+    let fact = parse testGrammar.generalRule "abap := sheila * sheila * sheila"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
-    //supercalc "6 / 2 * 3 - 4 * 1 - 5"
-    //let teste = parse testGrammar.boolOp "3<3 and true and false"
+    getFromParser fact
+    new_sum S C
+    //printStacks S C
     //let smc = new SMC()
     //printfn "%A" ( fact)
     getFromParser fact
     //new_sum S C
-    printStacks S C
+    //printSMC S M C
     //printStacks X S C
     //printfn "Result = %A" (calculator X S)
     
