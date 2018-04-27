@@ -4,11 +4,13 @@ open ScanRat
 open System
 
 open FSheila
+open Utils
 open Parser
 open Smc
       
 [<EntryPoint>]
 let main argv = 
+    printIntro
     //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
     let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
@@ -26,53 +28,49 @@ let main argv =
     //let teste = parse testGrammar.seqRule "a:= 333"
     //let teste = parse testGrammar.seqRule "a := 333 ; b := 444 ; ccc := 69-66*8 ; cas := 0 "//; b:= 555"
     //let teste = parse testGrammar.seqRule " a:= 333;b := 888 * 7 ; c := 666*777/8"
-    //let teste = parse testGrammar.loopRule "while 3<>4 { 
+    //let fact = parse testGrammar.generalRule "while x<>4 { 
     //                                              sheila3 := 555+8 ; 
     //                                              sheila := 9999 ; ati := 999*555 ;
     //                                              sheila2 := 4 <> 4 and false ;
     //                                              sheila3 := 4==6 or ~(3<5 and false);
-    //
     //                                              aaa := 1+9-5*8  
     //                                              }"
     //let teste2 = parse testGrammar.ifRule "if 4<>4 tim := 4 *2 +5 else maia := 4"
     //let teste2 = parse testGrammar.ifRule "if 7 <= 9 { 
     //                                          sheila := 3;
     //                                          sheila := 4 + 5 } else sheila := 4"
-    //let teste2 = parse testGrammar.ifRule "if 7 <= 9 sheila := 5/2 + 4 else { 
-    //                                                   sheila := 4;
-    //                                                    spacer := 69;
-    //                                                   star := 4*78/9-6}"
-    let teste2 = parse testGrammar.ifRule "if 7 <= 9 {
-                                           sheila := 444;
-                                           stack := 685/5;
-                                           overflow := 48 + abcd * sheila
-                                           } else    { 
-                                                       sheila := 4;
-                                                       spacer := 69;
+    let fact = parse testGrammar.generalRule "if 7 <= 9 sheila := 5/2 + 4 else { 
                                                        star := 4*78/9-6}"
+    //let fact = parse testGrammar.generalRule "if 7 <= 9 {
+    //                                       sheila := 444;
+    //                                       stack := 685/5;
+    //                                       overflow := 48 + abcd * sheila
+    //                                       } else    { 
+    //                                                   sheila := 4;
+    //                                                   spacer := 69;
+    //                                                   star := 4*78/9-6}"
+    //chamar a regra GeneralRule como acima
+    //let fact = parse testGrammar.assignRule "sheila := x * aaaa"
+    let fact1 = parse testGrammar.generalRule "while ~(x == 0) {
+                                           y := y * x;
+                                           x := x - 1 }"
+    //let fact = parse testGrammar.assignRule "y := x + 6"
     //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
 
 
 
     //et teste = parse testGrammar.assignRule "xda := true or 4<>5 and sheila4 <= 4  and ~(sheila2 and sheila)"
-    let teste = parse testGrammar.calcOp "-21 + 5555 + 3 + 4 * 666 /   5"
-    //let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
-    let teste = parse testGrammar.calcOp "6 / 2 * 3 - (-4) * 3 + 3"
-    //let smc = new SMC()
-    getFromParser teste
-    printfn "X = %A" (X)
-    printfn "S = %A" (S)
-    printfn "C = %A" (C)
-    printfn "Result = %A" (calculator X S)
-    //TESTES de SMC daqui para baixo: 
-    //let x = new SMC()
-    let get exp = 
-      match exp with
-        | Success s ->  s.value
-        | Failure f -> failwith "fail"
-    //let ae = valueOf teste
-    //printfn "%A" (get teste)
+    let teste = parse testGrammar.calcOp "(-21) + 5555 + 3 + 4 * 666 /   5"
+    let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
+    let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
+    //let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
+    let fact = parse testGrammar.generalRule "abap := sheila * sheila * sheila"
+    //let fact = parse testGrammar.generalRule "3 <= 4 == false"
+    M.Add("sheila",Number 3)
+    getFromParser fact
+    aKindOfMagic S M C
+    printSMC S M C
+    
     let sheila = Console.ReadLine()
     printfn "%A" sheila
-    //printfn "%A" argv
-    0 // retornar um código de saída inteiro
+    0

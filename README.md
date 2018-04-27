@@ -8,7 +8,7 @@
 
 ## Overview
 
-This compiler is under development as a class assignment; therefore, it is highly recommended not to use it for any other proposal.
+This compiler is under development as a class assignment; therefore, it is **highly recommended** not to use it for any other proposal.
 
 Class: [TCC-00.289](http://www.ic.uff.br/index.php/en-GB/) ministred by Professor Dr. [Chistiano Braga](http://www2.ic.uff.br/~cbraga/pmwiki/pmwiki.php/Main/AffiliationAndResearchInterests).
 
@@ -20,13 +20,20 @@ Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://gi
 
 * [F# Programming Language](http://fsharp.org/)
 * [ScanRat](https://github.com/pragmatrix/ScanRat) parsing expression grammar for F#
-* [.Net Core 2.X](https://www.microsoft.com/net/download/linux)
+* [.Net Core 2.x](https://www.microsoft.com/net/download/linux)
 * Faith
 
 ##### P.S.: For further information about systems prerequsits check [.Net Core Guide](https://docs.microsoft.com/en-us/dotnet/core/)
 
 ### Build and Run
 
-Just ```make run```. Really, simple as that.
-
-_ "Oh! On my computer it does not work!"; *Figure it out!* On our PC works just fine.
+#### Linux Debian-Based Distros
+```
+make install
+make run
+```
+#### MacOS
+```
+make install-macos
+make run
+```
