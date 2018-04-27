@@ -8,29 +8,28 @@ open System.Collections.Generic
 
 let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
-M.Add("sheila",Number 3)
 let C = new Stack<Cmd>()
 
-let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
+let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
         printSMC S M C
         let op = C.Pop()
         match op with
             | Sheila a -> match a with
-                            | "Add" -> new_sum S C; C.Push(XSheila "Add"); new_sum S C
-                            | "Subtract" -> new_sum S C; C.Push(XSheila "Subtract"); new_sum S C
-                            | "Multiply" -> new_sum S C; C.Push(XSheila "Multiply"); new_sum S C
-                            | "Divide" -> new_sum S C; C.Push(XSheila "Divide"); new_sum S C
-                            | "And" -> new_sum S C; C.Push(XSheila "And"); new_sum S C
-                            | "Or" -> new_sum S C; C.Push(XSheila "Or"); new_sum S C
-                            | "Neg" -> new_sum S C; C.Push(XSheila "Neg"); new_sum S C
-                            | "Eq" -> new_sum S C; C.Push(XSheila "Eq"); new_sum S C
-                            | "Neq" -> new_sum S C; C.Push(XSheila "Neq"); new_sum S C
-                            | "Leb" -> new_sum S C; C.Push(XSheila "Leb"); new_sum S C
-                            | "Leq" -> new_sum S C; C.Push(XSheila "Leq"); new_sum S C
-                            | "Geb" -> new_sum S C; C.Push(XSheila "Geb"); new_sum S C
-                            | "Geq" -> new_sum S C; C.Push(XSheila "Geq"); new_sum S C
-                            | "Assign" -> new_sum S C; C.Push(XSheila "Assign"); new_sum S C
+                            | "Add" -> aKindOfMagic S M C; C.Push(XSheila "Add"); aKindOfMagic S M C
+                            | "Subtract" -> aKindOfMagic S M C; C.Push(XSheila "Subtract"); aKindOfMagic S M C
+                            | "Multiply" -> aKindOfMagic S M C; C.Push(XSheila "Multiply"); aKindOfMagic S M C
+                            | "Divide" -> aKindOfMagic S M C; C.Push(XSheila "Divide"); aKindOfMagic S M C
+                            | "And" -> aKindOfMagic S M C; C.Push(XSheila "And"); aKindOfMagic S M C
+                            | "Or" -> aKindOfMagic S M C; C.Push(XSheila "Or"); aKindOfMagic S M C
+                            | "Neg" -> aKindOfMagic S M C; C.Push(XSheila "Neg"); aKindOfMagic S M C
+                            | "Eq" -> aKindOfMagic S M C; C.Push(XSheila "Eq"); aKindOfMagic S M C
+                            | "Neq" -> aKindOfMagic S M C; C.Push(XSheila "Neq"); aKindOfMagic S M C
+                            | "Leb" -> aKindOfMagic S M C; C.Push(XSheila "Leb"); aKindOfMagic S M C
+                            | "Leq" -> aKindOfMagic S M C; C.Push(XSheila "Leq"); aKindOfMagic S M C
+                            | "Geb" -> aKindOfMagic S M C; C.Push(XSheila "Geb"); aKindOfMagic S M C
+                            | "Geq" -> aKindOfMagic S M C; C.Push(XSheila "Geq"); aKindOfMagic S M C
+                            | "Assign" -> aKindOfMagic S M C; C.Push(XSheila "Assign"); aKindOfMagic S M C
             | XSheila a -> match a with
                             | "Add" -> match S.Pop(), S.Pop() with 
                                         | Number x, Number y -> S.Push(Number (x + y))
@@ -69,9 +68,9 @@ let rec new_sum (S: Stack<Cmd>) (C: Stack<Cmd>) =
                                                             | :? System.ArgumentException -> M.Remove(x); M.Add(x,Number y)
                                         | Id x, Boolean y -> (M.Add(x,Boolean y))
                                         | Id x, Id y -> (M.Add(x,M.Item(y)))
-            | Number x -> new_sum S C; S.Push(Number x)
-            | Boolean x -> new_sum S C; S.Push(Boolean x)
-            | Id x -> new_sum S C; S.Push (Id x)
+            | Number x -> aKindOfMagic S M C; S.Push(Number x)
+            | Boolean x -> aKindOfMagic S M C; S.Push(Boolean x)
+            | Id x -> aKindOfMagic S M C; S.Push (Id x)
             
 let rec stackator (exp) =
     match exp with
@@ -148,7 +147,7 @@ let rec stackator (exp) =
                     | Id x ->  C.Push(Id(x)); C.Push(Id(a)); C.Push(Sheila "Assign")
                     | x -> stackator(x); C.Push(Id(a)) ; C.Push(Sheila "Assign")
     | If (a, b, c) -> C.Push(c); C.Push(b); C.Push(a); C.Push(Sheila "If")
-    //| _ -> failwith "deu ruim"
+    | _ -> failwith "deu ruim"
 
     
     (*

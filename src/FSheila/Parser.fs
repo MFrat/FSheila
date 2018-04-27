@@ -1,7 +1,6 @@
 ﻿module FSheila.Parser
 
 open ScanRat
-open System.Numerics
 
 type Cmd =
          //id é apenas uma string que representa o nome da variável
@@ -35,7 +34,6 @@ type Cmd =
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
 
-        //basic shit:
         member this.whitespace = (~~" ").oneOrMore
         member this.linebreak = (~~"\r\n").oneOrMore
 

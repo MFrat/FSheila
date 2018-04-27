@@ -18,3 +18,4 @@ let printSMC S M C =
     printfn "S = %A" (S)
     printfn "M = %A" (M)
     printfn "C = %A" (C)
+    printfn "\n"
