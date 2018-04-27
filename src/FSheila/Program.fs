@@ -64,7 +64,7 @@ let main argv =
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
     //let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
-    let fact = parse testGrammar.generalRule "abap := sheila * sheila * sheila"
+    let fact = parse testGrammar.generalRule "tufak := 6 / 2 * 3 + (-4) * 1 - 5"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
     M.Add("sheila",Number 3)
     getFromParser fact
