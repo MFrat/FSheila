@@ -4,7 +4,7 @@ open ScanRat
 
 type Cmd =
          //id é apenas uma string que representa o nome da variável
-         | Var of string
+         //| Var of string
          | Assign of string * Cmd
          | Init of string * Cmd
          | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
@@ -29,7 +29,8 @@ type Cmd =
          | Sheila of string
          | XSheila of string
 
-         //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
+ type controlCmd =
+     | CmdAdd of Cmd
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC

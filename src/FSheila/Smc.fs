@@ -10,6 +10,7 @@ let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
+//tudo errado
 let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
         printSMC S M C
@@ -65,7 +66,7 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
                                         | Id x, Number y -> try
                                                              (M.Add(x,Number y))
                                                             with
-                                                            | :? System.ArgumentException -> M.Remove(x); M.Add(x,Number y)
+                                                            | :? System.ArgumentException -> M.Remove(x) |> ignore; M.Add(x,Number y)
                                         | Id x, Boolean y -> (M.Add(x,Boolean y))
                                         | Id x, Id y -> (M.Add(x,M.Item(y)))
             | Number x -> aKindOfMagic S M C; S.Push(Number x)
