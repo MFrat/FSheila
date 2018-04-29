@@ -53,9 +53,11 @@ let main argv =
     //let fact = parse testGrammar.assignRule "sheila := x * aaaa"
     let fact1 = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
-                                           x := x - 1 }"
+                                           x := x - 1;
+                                           sheila := false or false}"
     //let fact = parse testGrammar.assignRule "y := x + 6"
     //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
+    //let fact1 = parse testGrammar.seqRule " vaitomarnocu := 3 * sheila ; cu := true and 3 <> x"
 
 
 
@@ -64,11 +66,14 @@ let main argv =
     let teste = parse testGrammar.calcOp "2 + 2 * 4 + 9"
     let teste = parse testGrammar.calcOp "6 / 2 * 3 - 4 * 1 - 5"
     //let fact = parse testGrammar.generalRule "(-21) + 5555 + 3 + 4 * 666 /   5"
-    let fact = parse testGrammar.generalRule "abap := sheila * sheila * sheila"
+    //let fact1 = parse testGrammar.generalRule "abap := sheila + 3"
+    //let fact1 = parse testGrammar.generalRule "aaa := sheila and false or 3 <> kkk"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
-    M.Add("sheila",Number 3)
-    getFromParser fact
-    aKindOfMagic S M C
+    let fact1 = parse testGrammar.boolOp "true or false"
+    printfn "%A" fact1
+    //M.Add("sheila",Number 3)
+    //getFromParser fact1
+    //aKindOfMagic S M C
     printSMC S M C
     
     let sheila = Console.ReadLine()

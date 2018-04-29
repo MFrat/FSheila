@@ -124,22 +124,22 @@ type PEGParser () =
                 let identifier = this.identifier --> Exp.Id
                 //esse number acima é para manter todo mundo do mesmo tipo (Exp). Se não usar a regra do scanrat reclama de tipos inconsistentes na mesma regra.
 
-                let add = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"+" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt)  --> Add
-                let sub = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) --> Subtract
+                let add = (this.whitespace.oneOrMore.opt +. (additive |- identifier).+ this.whitespace.oneOrMore.opt) + ~~"+" + (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt)  --> fun(a,b) -> Add (fst(a),b)
+                let sub = (this.whitespace.oneOrMore.opt +. (additive |- identifier) .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt) --> Subtract
 
-                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Multiply
-                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Divide
+                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Multiply
+                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Divide
 
                 additive.rule 
                     <- add 
                     |- sub 
                     |- multiplicative
-                    |- identifier
+                    //|- identifier
 
                 multiplicative.rule 
                     <- multiply 
                     |- divide 
-                    |- identifier
+                    //|- identifier
                     |- number
                     
 
@@ -153,8 +153,8 @@ type PEGParser () =
              let number = this.number --> Number
              let id = this.identifier --> Exp.Id
              //se não me engano and tem precedência sobre or.
-             let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
-             let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
+             let ourAnd = (this.whitespace.oneOrMore.opt +. (andOp |- id).+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. (orOp |-id) .+ this.whitespace.oneOrMore.opt) --> And
+             let ourOr = (this.whitespace.oneOrMore.opt +. (andOp |- id) .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. (orOp |- id) .+ this.whitespace.oneOrMore.opt) --> Or
              let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean |- id) --> Neg
                         |- ( this.whitespace.oneOrMore.opt + ~~"~" + this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"(" +. (andOp |- orOp) .+ this.whitespace.oneOrMore.opt .+ ~~")")  --> Neg
 
@@ -172,7 +172,7 @@ type PEGParser () =
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- this.identifier --> Id
+                 //|- this.identifier --> Id
 
              orOp.rule
                  <- ourAnd
@@ -180,7 +180,7 @@ type PEGParser () =
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- this.identifier --> Id
+                 //|- this.identifier --> Id
                 
              andOp
 
@@ -222,16 +222,28 @@ type PEGParser () =
          
 
         //regra do assign
-        member this.assignRule =
-             let boole = this.boolOp 
-             let numExp = this.calcOp
-             let assignRule = production "assignRule"
+        member this.assignRuleExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  this.calcOp .+ this.whitespace.oneOrMore.opt) --> Assign
+             //let boole = this.boolOp 
+             //let numExp = this.calcOp
+             //let assignRuleExp = production "assignRuleExp"
              //note a ordem do valor que assign recebe (boole |- numExp ). Se isso não fica montado nesta ordem, o parser entende que true é um possível identificador.
-             let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. (boole |- numExp ) .+ this.whitespace.oneOrMore.opt) --> Assign
-             assignRule.rule
+             //let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  numExp  .+ this.whitespace.oneOrMore.opt) --> Assign
+            // assignRuleExp.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
-                <- ( oneAssignExp) //+ moreAssigns.oneOrMore.opt)
-             assignRule
+               // <-  oneAssignExp //+ moreAssigns.oneOrMore.opt)
+             //assignRuleExp
+
+        member this.assignRuleBool = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  this.boolOp .+ this.whitespace.oneOrMore.opt) --> Assign
+             //let boole = this.boolOp 
+             //let assignRuleBool = production "assignRuleBool"
+             //note a ordem do valor que assign recebe (boole |- numExp ). Se isso não fica montado nesta ordem, o parser entende que true é um possível identificador.
+             //let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. boole  .+ this.whitespace.oneOrMore.opt) --> Assign
+             //assignRuleBool.rule
+                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
+             //   <-  oneAssignExp //+ moreAssigns.oneOrMore.opt)
+             //assignRuleBool
+        
+        member this.assignRule = this.assignRuleExp |- this.assignRuleBool 
          
 
         member this.ifRule =
