@@ -6,7 +6,14 @@ open ScanRat
 //MODIFICAÇÕES: a pilha c agora só aceita COMANDOS efetivamente como o professor requeriu (e a teoria também).
 //Agora é basear a SMC nesses tipos (note que os tipos Cmd_____ operam como marcação de controle, e dessa forma será possível usar a recursão para desmontar a árvore, empilhar dessa forma e resolver.
 //a ideia é daqui a pouco eu jogar esse tipo number pra pilha de controle onde vai ser possível empilhar os numeros..
-type number = Number of int
+//type number = Number of int
+
+type Values =
+         | Number of int
+         | Boolean of bool
+         //| Id of ide
+         | Id of string
+//nota: os tipos acima são replicados para fins de serem usados como operandos base das operações aritméticas/booleanas. Acima é apenas para restringir o tipo de valores da pilha S.     
 type Exp = 
          | Add of Exp * Exp
          | Subtract of Exp * Exp
@@ -62,28 +69,31 @@ type Cmd =
          | CmdLeq 
          | CmdGeb 
          | CmdGeq 
-         | CmdNeq 
+         | CmdNeq
+         | CmdAssign
+         | CmdIf
+         | CmdWhile
          //| Sheila of string
          //| XSheila of string
 
 //ideia do professor não funciona em F#. a ídeia é incluir todos no tipo Cmd mas sem o problema de empilhar o bagulho sozinho.
-  type controlCmd =
-     | CmdAdd
-     | CmdSubtract
-     | CmdDivide 
-     | CmdMultiply 
-     | CmdAnd  
-     | CmdOr  
-     | CmdNeg  
-     | CmdEq  
-     | CmdLeb  
-     | CmdLeq 
-     | CmdGeb 
-     | CmdGeq 
-     | CmdNeq 
-     | CmdNumber of int
-     | CmdBoolean of bool
-     | CmdId of string
+//  type controlCmd =
+//     | CmdAdd
+//     | CmdSubtract
+//     | CmdDivide 
+//     | CmdMultiply 
+//     | CmdAnd  
+//     | CmdOr  
+//     | CmdNeg  
+//     | CmdEq  
+//     | CmdLeb  
+//     | CmdLeq 
+//     | CmdGeb 
+//     | CmdGeq 
+//     | CmdNeq 
+//     | CmdNumber of int
+//     | CmdBoolean of bool
+//     | CmdId of string
 
 
      
