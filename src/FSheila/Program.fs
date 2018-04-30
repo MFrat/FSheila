@@ -69,11 +69,12 @@ let main argv =
     //let fact1 = parse testGrammar.generalRule "abap := sheila + 3"
     //let fact1 = parse testGrammar.generalRule "aaa := sheila and false or 3 <> kkk"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
-    let fact1 = parse testGrammar.boolOp "true or false"
-    printfn "%A" fact1
+    //let fact1 = parse testGrammar.boolOp "true or false"
+    let fact1 = parse testGrammar.generalRule "ass := 3"
+    //printfn "%A" fact1
     //M.Add("sheila",Number 3)
-    //getFromParser fact1
-    //aKindOfMagic S M C
+    getFromParser fact1
+    aKindOfMagic S M C
     printSMC S M C
     
     let sheila = Console.ReadLine()
