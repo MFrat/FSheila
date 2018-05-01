@@ -224,6 +224,7 @@ type PEGParser () =
         
 
         //de loop só tem o while na documentação da IMP:
-        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
+        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
+                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  this.whitespace.oneOrMore  + this.command --> Loop
         
         member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule |- this.calcOp |- this.boolOp

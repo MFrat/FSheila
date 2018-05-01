@@ -51,10 +51,10 @@ let main argv =
     //                                                   star := 4*78/9-6}"
     //chamar a regra GeneralRule como acima
     //let fact = parse testGrammar.assignRule "sheila := x * aaaa"
-    let fact1 = parse testGrammar.generalRule "while ~(x == 0) {
-                                           y := y * x;
-                                           x := x - 1;
-                                           sheila := false or false}"
+    let caval = parse testGrammar.generalRule "while ~(x == 0) {
+                                           y := true;
+                                           x := x - 1
+                                           }"
     //let fact = parse testGrammar.assignRule "y := x + 6"
     //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
     //let fact1 = parse testGrammar.seqRule " vaitomarnocu := 3 * sheila ; cu := true and 3 <> x"
@@ -73,10 +73,11 @@ let main argv =
     //let fact1 = parse testGrammar.generalRule "ass := 6 / 2 * 3 - 4 * 1 - 5"
     //printfn "%A" fact1
     //M.Add("sheila",Number 3)
-    let fact2 = parse testGrammar.generalRule "while ~(x == 0) {
-                                           y := 1 + 1;
-                                           sheila := false or false}"
-    getFromParser fact
+    let fact2 = parse testGrammar.generalRule "while ~(y <> 2) {
+                                               y := y + 1
+                                               }"
+    //printfn "%A" fact2
+    getFromParser caval
     aKindOfMagic S M C
     printSMC S M C
     

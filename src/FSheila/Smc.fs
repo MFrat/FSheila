@@ -10,6 +10,9 @@ let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
+M.Add("y",Boolean(true))
+M.Add("x", Number(5))
+
 let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
         printSMC S M C
@@ -37,7 +40,7 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
         | Assign (x,y) -> S.Push(Id(x)); C.Push(CmdAssign); C.Push(y)
         | If (x,y,z) -> S.Push(z); S.Push(y); C.Push(CmdIf); C.Push(x)
         | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(CmdLoop); C.Push(x)
-        | Seq (x,y) -> S.Push(y); S.Push(x)
+        | Seq (x,y) -> C.Push(y); C.Push(x)
         //Actions
         | CmdAdd -> match S.Pop(), S.Pop() with
                     | Number x, Number y -> (S.Push(Number(x + y)))
@@ -60,16 +63,23 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
                     | Boolean x, Boolean y -> (S.Push(Boolean(x <> y)))
                     | Number x, Number y -> (S.Push(Boolean(x <> y)))                
         | CmdLeb -> match S.Pop(), S.Pop() with
-                    | Number x, Number y -> (S.Push(Boolean(x < y)))
+                    | Number x, Number y -> (S.Push(Boolean(y < x)))
         | CmdLeq -> match S.Pop(), S.Pop() with
-                    | Number x, Number y -> (S.Push(Boolean(x <= y)))
+                    | Number x, Number y -> (S.Push(Boolean(y <= x)))
         | CmdGeb -> match S.Pop(), S.Pop() with
-                    | Number x, Number y -> (S.Push(Boolean(x > y)))
+                    | Number x, Number y -> (S.Push(Boolean(y > x)))
         | CmdGeq -> match S.Pop(), S.Pop() with
-                    | Number x, Number y -> (S.Push(Boolean(x >= y)))
+                    | Number x, Number y -> (S.Push(Boolean(y >= x)))
         | CmdAssign -> match S.Pop(), S.Pop() with
-                        | Number y, Id x -> (M.Add(x,Number y))
-                        | Boolean y, Id x -> (M.Add(x,Boolean y))
+                        | Number y, Id x -> try (M.Add(x,Number y))
+                                            with
+                                            | :? System.ArgumentException -> M.Remove(x) ; M.Add(x,Number y)
+                        | Boolean y, Id x -> try (M.Add(x,Boolean y))
+                                             with
+                                             | :? System.ArgumentException -> M.Remove(x)  ; M.Add(x,Boolean y)
+                        | Id y, Id x      -> try (M.Add(y,M.Item(x)))
+                                             with
+                                             | :? System.ArgumentException -> M.Remove(x)  ; (M.Add(y,M.Item(x)))
         | CmdIf -> match S.Pop(), S.Pop(), S.Pop() with
                     | Boolean x, y, z -> match x with
                         | true -> C.Push(y)
