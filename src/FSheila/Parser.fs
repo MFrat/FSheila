@@ -26,9 +26,22 @@ type Cmd =
          | Number of int
          | Boolean of bool
          | Id of string
-         | Sheila of string
-         | XSheila of string
-
+         | CmdAdd
+         | CmdSubtract
+         | CmdDivide 
+         | CmdMultiply 
+         | CmdAnd  
+         | CmdOr  
+         | CmdNeg  
+         | CmdEq  
+         | CmdLeb  
+         | CmdLeq 
+         | CmdGeb 
+         | CmdGeq 
+         | CmdNeq
+         | CmdAssign
+         | CmdIf
+         | CmdLoop
          //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
@@ -67,22 +80,22 @@ type PEGParser () =
                 let id = this.id --> Id
                 //esse number acima é para manter todo mundo do mesmo tipo (Exp). Se não usar a regra do scanrat reclama de tipos inconsistentes na mesma regra.
 
-                let add = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"+" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt)  --> Add
-                let sub = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) --> Subtract
+                let add = (this.whitespace.oneOrMore.opt +. (additive |- id) .+ this.whitespace.oneOrMore.opt) .+ ~~"+" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt)  --> Add
+                let sub = (this.whitespace.oneOrMore.opt +. (additive |- id) .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) --> Subtract
 
-                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Multiply
-                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Divide
+                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative |- id ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Multiply
+                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative |- id) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Divide
 
                 additive.rule 
                     <- add 
                     |- sub 
                     |- multiplicative
-                    |- id
-
+                    //|- id
+                
                 multiplicative.rule 
                     <- multiply 
                     |- divide 
-                    |- id
+                    //|- id
                     |- number
                     
 
@@ -92,7 +105,7 @@ type PEGParser () =
              let andOp = production "andOp"
              let orOp = production "orOp"
 
-             let boolean = this.whitespace.oneOrMore.opt +. this.booleanType --> Boolean
+             let boolean = this.whitespace.oneOrMore.opt +. this.booleanType  .+ this.whitespace.oneOrMore.opt --> Boolean
              let number = this.number --> Number
              let id = this.id --> Id
              //se não me engano and tem precedência sobre or.
@@ -110,19 +123,19 @@ type PEGParser () =
              let compareOp = eqOp |- lebOp |- leqOp |- gebOp |- geqOp |- neqOp
              //a princípio, não é permitido 3 + 4 < 4 * 5, por exemplo (operações matemáticas dentro de comparações numéricas).
              andOp.rule
-                 <- ourAnd 
+                 <- boolean
+                 |- ourAnd 
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- boolean
                  |- this.id --> Id
 
              orOp.rule
-                 <- ourAnd
+                 <- boolean
+                 |- ourAnd
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- boolean
                  |- this.id --> Id
                 
              andOp
@@ -147,8 +160,8 @@ type PEGParser () =
                constAtr.rule
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
+
         member this.initRule =
-                //boolexp tá bugado
              let boole = this.boolOp //--> Boolexp
              let numExp = this.calcOp //|- boole
              //let boolEx = 
@@ -211,6 +224,7 @@ type PEGParser () =
         
 
         //de loop só tem o while na documentação da IMP:
-        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
+        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
+                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  this.whitespace.oneOrMore  + this.command --> Loop
         
-        member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule |- this.calcOp |- this.boolOp
+        member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
