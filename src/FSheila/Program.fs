@@ -54,7 +54,7 @@ let main argv =
     let fact1 = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
                                            x := x - 1;
-                                           sheila := false or false}"
+                                           sheila := false and false}"
     //let fact = parse testGrammar.assignRule "y := x + 6"
     //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
     //let fact1 = parse testGrammar.seqRule " vaitomarnocu := 3 * sheila ; cu := true and 3 <> x"
@@ -70,7 +70,7 @@ let main argv =
     //let fact1 = parse testGrammar.generalRule "aaa := sheila and false or 3 <> kkk"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
     //let fact1 = parse testGrammar.boolOp "true or false"
-    let fact1 = parse testGrammar.generalRule "ass := 3"
+    let fact1 = parse testGrammar.generalRule "ass := 3 + 3"
     //printfn "%A" fact1
     //M.Add("sheila",Number 3)
     getFromParser fact1

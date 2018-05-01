@@ -2,61 +2,30 @@
 
 open ScanRat
 
-//type ide = | Id of string
-//MODIFICAÇÕES: a pilha c agora só aceita COMANDOS efetivamente como o professor requeriu (e a teoria também).
-//Agora é basear a SMC nesses tipos (note que os tipos Cmd_____ operam como marcação de controle, e dessa forma será possível usar a recursão para desmontar a árvore, empilhar dessa forma e resolver.
-//a ideia é daqui a pouco eu jogar esse tipo number pra pilha de controle onde vai ser possível empilhar os numeros..
-//type number = Number of int
-
-type Values =
-         | Number of int
-         | Boolean of bool
-         //| Id of ide
-         | Id of string
-//nota: os tipos acima são replicados para fins de serem usados como operandos base das operações aritméticas/booleanas. Acima é apenas para restringir o tipo de valores da pilha S.     
-type Exp = 
-         | Add of Exp * Exp
-         | Subtract of Exp * Exp
-         | Multiply of Exp * Exp
-         | Divide of Exp * Exp
-         | And of Exp * Exp
-         | Or of Exp * Exp
-         | Neg of Exp
-         | Eq of  Exp * Exp
-         | Leb of Exp * Exp
-         | Leq of Exp * Exp
-         | Geb of Exp * Exp
-         | Geq of Exp * Exp
-         | Neq of Exp * Exp
-         | Number of int
-         | Boolean of bool
-         //| Id of ide
-         | Id of string
-
-//type BoolExp =
-//         | And of BoolExp * BoolExp
-//         | Or of BoolExp * BoolExp
-//         | Neg of BoolExp
-//         | Eq of  Exp * Exp
-//         | Leb of Exp * Exp
-//         | Leq of Exp * Exp
-//         | Geb of Exp * Exp
-//         | Geq of Exp * Exp
-//         | Neq of Exp * Exp
-//         | Boolean of bool
-//         | Id of ide
-//         | Id of string
-
-
 type Cmd =
          //id é apenas uma string que representa o nome da variável
-         //| Var of string
-         | Assign of string * Exp
-         | Init of string * Exp
-         | If of Exp * Cmd * Cmd //boolCmd vira Cmd
-         | Loop of Exp * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | Var of string
+         | Assign of string * Cmd
+         | Init of string * Cmd
+         | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
+         | Loop of Cmd * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
-         //flags de operações like xsheila, marcação de controle pro C e ser possível fazer aquela desempilhar.
+         | Add of Cmd * Cmd
+         | Subtract of Cmd * Cmd
+         | Multiply of Cmd * Cmd
+         | Divide of Cmd * Cmd
+         | And of Cmd * Cmd
+         | Or of Cmd * Cmd
+         | Neg of Cmd
+         | Eq of  Cmd * Cmd
+         | Leb of Cmd * Cmd
+         | Leq of Cmd * Cmd
+         | Geb of Cmd * Cmd
+         | Geq of Cmd * Cmd
+         | Neq of Cmd * Cmd
+         | Number of int
+         | Boolean of bool
+         | Id of string
          | CmdAdd
          | CmdSubtract
          | CmdDivide 
@@ -73,30 +42,9 @@ type Cmd =
          | CmdAssign
          | CmdIf
          | CmdWhile
-         //| Sheila of string
-         //| XSheila of string
-
-//ideia do professor não funciona em F#. a ídeia é incluir todos no tipo Cmd mas sem o problema de empilhar o bagulho sozinho.
-//  type controlCmd =
-//     | CmdAdd
-//     | CmdSubtract
-//     | CmdDivide 
-//     | CmdMultiply 
-//     | CmdAnd  
-//     | CmdOr  
-//     | CmdNeg  
-//     | CmdEq  
-//     | CmdLeb  
-//     | CmdLeq 
-//     | CmdGeb 
-//     | CmdGeq 
-//     | CmdNeq 
-//     | CmdNumber of int
-//     | CmdBoolean of bool
-//     | CmdId of string
 
 
-     
+         //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -120,8 +68,8 @@ type PEGParser () =
         member this.letter = this.lLetter |- this.uLetter
         
         //correção no id: antes permitia apenas um número ser um identificador.
-        member this.identifier = (this.letter + (this.letter |- this.digit).oneOrMore) --> fun (a,l) -> a::l |> System.String.Concat
-                                  |- this.letter --> fun a -> (string) a
+        member this.id = (this.letter + (this.letter |- this.digit).oneOrMore) --> fun (a,l) -> a::l |> System.String.Concat
+                         |- this.letter --> fun a -> (string) a
 
         //operators:
         //regras de parsing de operações numéricas
@@ -131,25 +79,25 @@ type PEGParser () =
                 let additive = production "additive"
         
                 let number = this.number --> Number
-                let identifier = this.identifier --> Exp.Id
+                let id = this.id --> Id
                 //esse number acima é para manter todo mundo do mesmo tipo (Exp). Se não usar a regra do scanrat reclama de tipos inconsistentes na mesma regra.
 
-                let add = (this.whitespace.oneOrMore.opt +. (additive |- identifier).+ this.whitespace.oneOrMore.opt) + ~~"+" + (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt)  --> fun(a,b) -> Add (fst(a),b)
-                let sub = (this.whitespace.oneOrMore.opt +. (additive |- identifier) .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt) --> Subtract
+                let add = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"+" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt)  --> Add
+                let sub = (this.whitespace.oneOrMore.opt +. additive .+ this.whitespace.oneOrMore.opt) .+ ~~"-" + (this.whitespace.oneOrMore.opt +. multiplicative .+ this.whitespace.oneOrMore.opt) --> Subtract
 
-                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Multiply
-                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative |- identifier) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- identifier) .+ this.whitespace.oneOrMore.opt) --> Divide
+                let multiply = (this.whitespace.oneOrMore.opt +. (multiplicative ) .+ this.whitespace.oneOrMore.opt) .+ ~~"*" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Multiply
+                let divide = (this.whitespace.oneOrMore.opt +. (multiplicative) .+ this.whitespace.oneOrMore.opt) .+ ~~"/" + (this.whitespace.oneOrMore.opt +. (number |- id) .+ this.whitespace.oneOrMore.opt) --> Divide
 
                 additive.rule 
                     <- add 
                     |- sub 
                     |- multiplicative
-                    //|- identifier
+                    |- id
 
                 multiplicative.rule 
                     <- multiply 
                     |- divide 
-                    //|- identifier
+                    |- id
                     |- number
                     
 
@@ -161,10 +109,10 @@ type PEGParser () =
 
              let boolean = this.whitespace.oneOrMore.opt +. this.booleanType --> Boolean
              let number = this.number --> Number
-             let id = this.identifier --> Exp.Id
+             let id = this.id --> Id
              //se não me engano and tem precedência sobre or.
-             let ourAnd = (this.whitespace.oneOrMore.opt +. (andOp |- id).+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. (orOp |-id) .+ this.whitespace.oneOrMore.opt) --> And
-             let ourOr = (this.whitespace.oneOrMore.opt +. (andOp |- id) .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. (orOp |- id) .+ this.whitespace.oneOrMore.opt) --> Or
+             let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
+             let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
              let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean |- id) --> Neg
                         |- ( this.whitespace.oneOrMore.opt + ~~"~" + this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"(" +. (andOp |- orOp) .+ this.whitespace.oneOrMore.opt .+ ~~")")  --> Neg
 
@@ -177,20 +125,20 @@ type PEGParser () =
              let compareOp = eqOp |- lebOp |- leqOp |- gebOp |- geqOp |- neqOp
              //a princípio, não é permitido 3 + 4 < 4 * 5, por exemplo (operações matemáticas dentro de comparações numéricas).
              andOp.rule
-                 <- ourAnd
-                 |- boolean
+                 <- ourAnd 
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 //|- this.identifier --> Id
+                 |- boolean
+                 |- this.id --> Id
 
              orOp.rule
                  <- ourAnd
-                 |- boolean
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 //|- this.identifier --> Id
+                 |- boolean
+                 |- this.id --> Id
                 
              andOp
 
@@ -200,8 +148,8 @@ type PEGParser () =
         member this.varRule = 
                let var = production "var"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depoi da keyword "var"
-               let oneVar = ~~"var" + (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt)
-               let moreVars =  ~~"," +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt)
+               let oneVar = ~~"var" + (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt)
+               let moreVars =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
                var.rule
                   <- oneVar + moreVars.oneOrMore.opt
                var
@@ -209,8 +157,8 @@ type PEGParser () =
         member this.constRule = 
                let constAtr = production "const"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depois da keyword "const"
-               let oneConst = ~~"const" + (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt)
-               let moreConsts =  ~~"," +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt)
+               let oneConst = ~~"const" + (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt)
+               let moreConsts =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
                constAtr.rule
                   <- oneConst + moreConsts.oneOrMore.opt
                constAtr
@@ -220,11 +168,11 @@ type PEGParser () =
              let numExp = this.calcOp //|- boole
              //let boolEx = 
              let initRule = production "initRule"
-             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
-             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
+             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
              //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt)
-             let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.identifier .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+             let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+             let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
              initRule.rule //tem que ver isso aqui
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
                 <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
@@ -232,28 +180,15 @@ type PEGParser () =
          
 
         //regra do assign
-        member this.assignRuleExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  this.calcOp .+ this.whitespace.oneOrMore.opt) --> Assign
-             //let boole = this.boolOp 
-             //let numExp = this.calcOp
-             //let assignRuleExp = production "assignRuleExp"
-             //note a ordem do valor que assign recebe (boole |- numExp ). Se isso não fica montado nesta ordem, o parser entende que true é um possível identificador.
-             //let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  numExp  .+ this.whitespace.oneOrMore.opt) --> Assign
-            // assignRuleExp.rule
+        member this.assignRule =
+             let boole = this.boolOp 
+             let numExp = this.calcOp
+             let assignRule = production "assignRule"
+             let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Assign
+             assignRule.rule
                 //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
-               // <-  oneAssignExp //+ moreAssigns.oneOrMore.opt)
-             //assignRuleExp
-
-        member this.assignRuleBool = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +.  this.boolOp .+ this.whitespace.oneOrMore.opt) --> Assign
-             //let boole = this.boolOp 
-             //let assignRuleBool = production "assignRuleBool"
-             //note a ordem do valor que assign recebe (boole |- numExp ). Se isso não fica montado nesta ordem, o parser entende que true é um possível identificador.
-             //let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.identifier .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. boole  .+ this.whitespace.oneOrMore.opt) --> Assign
-             //assignRuleBool.rule
-                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const",acho eu).
-             //   <-  oneAssignExp //+ moreAssigns.oneOrMore.opt)
-             //assignRuleBool
-        
-        member this.assignRule = this.assignRuleExp |- this.assignRuleBool 
+                <- ( oneAssignExp) //+ moreAssigns.oneOrMore.opt)
+             assignRule
          
 
         member this.ifRule =
@@ -293,4 +228,4 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command  --> Loop
         
-        member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
+        member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule |- this.calcOp |- this.boolOp

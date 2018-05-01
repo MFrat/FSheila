@@ -6,53 +6,28 @@ open Utils
 open Parser
 open System.Collections.Generic
 
-let S = new Stack<Values>()
-let M = new Dictionary<string, Values>()
+let S = new Stack<Cmd>()
+let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
 
-//hello there.
-//let calculatorTabajara exp1 exp2 =
-//    match exp1 with
-//    | Add (x,y) -> match x,y with
-//    | Subtract (x,y) 
-//    | Multiply (x,y)
-//    | Divide (x,y)
-//    | And (x,y)
-//    | Or of Exp * Exp
-//    | Neg of Exp
-//    | Eq of  Exp * Exp
-//    | Leb of Exp * Exp
-//    | Leq of Exp * Exp
-//    | Geb of Exp * Exp
-//    | Geq of Exp * Exp
-//    | Neq of Exp * Exp
-let rec aKindOfMagic (S: Stack<Values>) (M: Dictionary<string, Values>) (C: Stack<Cmd>) =
+
+let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
         printSMC S M C
         let op = C.Pop()
         match op with
-            | Assign (a,b) -> S.Push(Values.Id(a)); C.Push(CmdAssign); match b with
-                              | Number x -> S.Push(Values.Number(x)); aKindOfMagic S M C
-                              | Add (x,y) -> match x,y with
-                                            | Number a, Number b -> S.Push(Values.Number(b));S.Push(Values.Number a); C.Push(CmdAdd) ; aKindOfMagic S M C 
-                                            //| a ,b -> 
-            //leia o Assign assim como foi feito no Plotkin: ele faz a regra C := I , empilhando o Id da variavel na pilha de valores, a operação de atribuição e a expressão a qual será atribuida                  
-            | CmdAdd -> match S.Pop(), S.Pop() with
-                        | Values.Number x, Values.Number y -> S.Push(Values.Number(x + y)); aKindOfMagic S M C
-                        | a, b -> aKindOfMagic S M C //esse caso nunca vai cair.
-            //depois de ter resolvido tudo, o primeiro cara da pilha é um valor (numérico) e abaixo dele é o id:
-            | CmdAssign -> match S.Pop(), S.Pop() with
-                         | Values.Number y, Values.Id x -> try
-                                                             (M.Add(x,Values.Number y))
-                                                            with
-                                                            | :? System.ArgumentException -> M.Remove(x); M.Add(x,Values.Number y)
-                         | Values.Boolean y, Values.Id x -> try
-                                                             (M.Add(x,Values.Boolean y))
-                                                            with
-                                                            | :? System.ArgumentException -> M.Remove(x); M.Add(x,Values.Boolean y)
-
-    
+        | Number a -> S.Push(Number(a)); aKindOfMagic S M C
+        | Id x -> S.Push(M.Item(x)); aKindOfMagic S M C
+        | Add (x,y) -> C.Push(CmdAdd); C.Push(y); C.Push(x); aKindOfMagic S M C
+        | Assign (a,b) -> S.Push(Id(a)); C.Push(CmdAssign); C.Push(b); aKindOfMagic S M C
+        | CmdAdd -> match S.Pop(), S.Pop() with
+                    | Number x, Number y -> (S.Push(Number(x + y))) ; aKindOfMagic S M C
+                    
+        | CmdAssign -> match S.Pop(), S.Pop() with
+                      | Number y, Id x -> (M.Add(x,Number y)) ; aKindOfMagic S M C
+                      | Boolean y, Id x -> (M.Add(x,Boolean y)) ; aKindOfMagic S M C
+                                         
     (*
     //comandos TODO While e If.
     | Assign (a,b) -> X.Push("Assign"); S.Push(Id a); stackator b
