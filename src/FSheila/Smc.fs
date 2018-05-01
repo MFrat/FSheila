@@ -10,8 +10,6 @@ let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
-
-
 let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
         printSMC S M C
@@ -39,7 +37,7 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
         | Assign (x,y) -> S.Push(Id(x)); C.Push(CmdAssign); C.Push(y)
         | If (x,y,z) -> S.Push(z); S.Push(y); C.Push(CmdIf); C.Push(x)
         | Loop (x,y) -> S.Push(y); S.Push(x); S.Push(CmdLoop); C.Push(x)
-        //| Seq ->
+        | Seq (x,y) -> S.Push(y); S.Push(x)
         //Actions
         | CmdAdd -> match S.Pop(), S.Pop() with
                     | Number x, Number y -> (S.Push(Number(x + y)))
@@ -82,24 +80,6 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
                         | false -> ()
         ; aKindOfMagic S M C
         
-                                         
-    (*
-    //comandos TODO While e If.
-    | Assign (a,b) -> X.Push("Assign"); S.Push(Id a); stackator b
-    | If (a,b,c) -> X.Push("If") ; S.Push(c); S.Push(b); S.Push(a) //IDEIA: segundo plotkin, empulha os comandos todos na pilha S. Se a for verdade, executar b e desempilhar c, se a não for verdade, desempilha b e executa c.
-    | Loop (a,b) -> X.Push("Loop") ; S.Push(a); S.Push(b) //a semántica das regras de eliminação E1 e E2 do plotkin virão das calculadoras
-    //real if e while não sei fazer direito não.
-
-//let commandCalculator  (X: Stack<string>) (S: Stack<Cmd>) =
-//    while X.Count <> 0 do
-//       let op = X.Pop()
-//        let d1 = S.Pop()
-//        let d2 = S.Peek() //famosa gambiarra
-//        match op with
-//            | "Assign" -> match (d1,d2) with //queria reutilizar uma possivel calculadora, mas vamos ver:
-//                         | Id a, k -> match k with //BUGADO: necessitamos de uma forma de resolver k antes de fazer M.Item(a,k), ou seja, atribuir k ao valor "a" na memória M.                                        
-    
-    *)
 let stackator cmd = C.Push(cmd)
 let getFromParser (exp) =
     match exp with
