@@ -11,7 +11,6 @@ open Smc
 [<EntryPoint>]
 let main argv = 
     printIntro
-    //nota: tornar possível 3 + 4 <= 5 - 8, ou seja, operações matemáticas dentro de booleanas. Se isso for necessário basta trocar number por EXP (ou explicitamente por cada uma das comparações numéricas.
     let testGrammar = new PEGParser()
     let fat = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
