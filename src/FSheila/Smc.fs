@@ -36,7 +36,7 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
         //Commands
         | Assign (x,y) -> S.Push(Id(x)); C.Push(CmdAssign); C.Push(y)
         | If (x,y,z) -> S.Push(z); S.Push(y); C.Push(CmdIf); C.Push(x)
-        | Loop (x,y) -> S.Push(y); S.Push(x); S.Push(CmdLoop); C.Push(x)
+        | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(CmdLoop); C.Push(x)
         | Seq (x,y) -> S.Push(y); S.Push(x)
         //Actions
         | CmdAdd -> match S.Pop(), S.Pop() with
@@ -69,7 +69,7 @@ let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>
                     | Number x, Number y -> (S.Push(Boolean(x >= y)))
         | CmdAssign -> match S.Pop(), S.Pop() with
                         | Number y, Id x -> (M.Add(x,Number y))
-                        | Boolean y, Id x -> (M.Add(x,Boolean y)) 
+                        | Boolean y, Id x -> (M.Add(x,Boolean y))
         | CmdIf -> match S.Pop(), S.Pop(), S.Pop() with
                     | Boolean x, y, z -> match x with
                         | true -> C.Push(y)
