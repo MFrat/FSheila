@@ -70,7 +70,7 @@ let main argv =
     //let fact1 = parse testGrammar.generalRule "aaa := sheila and false or 3 <> kkk"
     //let fact = parse testGrammar.generalRule "3 <= 4 == false"
     //let fact1 = parse testGrammar.boolOp "true or false"
-    let fact1 = parse testGrammar.generalRule "ass := 3 + 3"
+    let fact1 = parse testGrammar.generalRule "ass := 6 / 2 * 3 - 4 * 1 - 5"
     //printfn "%A" fact1
     //M.Add("sheila",Number 3)
     getFromParser fact1
