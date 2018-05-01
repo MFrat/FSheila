@@ -41,9 +41,7 @@ type Cmd =
          | CmdNeq
          | CmdAssign
          | CmdIf
-         | CmdWhile
-
-
+         | CmdLoop
          //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
 
 type PEGParser () = 
