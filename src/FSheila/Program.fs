@@ -52,8 +52,9 @@ let main argv =
     //chamar a regra GeneralRule como acima
     //let fact = parse testGrammar.assignRule "sheila := x * aaaa"
     let caval = parse testGrammar.generalRule "while ~(x == 0) {
-                                           y := true;
-                                           x := x - 1
+                                           y := y * x;
+                                           x := x - 1;
+                                           sheila := y > x and x > 0
                                            }"
     //let fact = parse testGrammar.assignRule "y := x + 6"
     //let teste2 = parse testGrammar.seqRule "sheila := 24*999 + 3"
@@ -76,6 +77,7 @@ let main argv =
     let fact2 = parse testGrammar.generalRule "while ~(y <> 2) {
                                                y := y + 1
                                                }"
+    let bete = parse testGrammar.generalRule "y := x > y or true"
     //printfn "%A" fact2
     getFromParser caval
     aKindOfMagic S M C
