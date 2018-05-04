@@ -109,7 +109,7 @@ type PEGParser () =
              let number = this.number --> Number
              let id = this.id --> Id
              //se não me engano and tem precedência sobre or.
-             let ourAnd = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> And
+             let ourAnd = (this.whitespace.oneOrMore.opt +. (boolean |- andOp) .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. (boolean |- orOp) .+ this.whitespace.oneOrMore.opt) --> And
              let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
              let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean |- id) --> Neg
                         |- ( this.whitespace.oneOrMore.opt + ~~"~" + this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"(" +. (andOp |- orOp) .+ this.whitespace.oneOrMore.opt .+ ~~")")  --> Neg
@@ -128,7 +128,7 @@ type PEGParser () =
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- this.id --> Id
+                 //|- this.id --> Id
 
              orOp.rule
                  <- boolean
@@ -136,7 +136,7 @@ type PEGParser () =
                  |- ourOr
                  |- ourNeg
                  |- compareOp
-                 |- this.id --> Id
+                 //|- this.id --> Id
                 
              andOp
 
@@ -191,7 +191,8 @@ type PEGParser () =
 
         member this.ifRule =
                //let command = this.assignRule
-               let boolExp = this.boolOp
+               //adicionado parentização no "if"
+               let boolExp = (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt )
                let block = this.blockRule
 
                let ifRule = production "ifRule"

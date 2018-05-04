@@ -11,7 +11,7 @@ let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
 M.Add("y", Number(1))
-M.Add("x", Number(6))
+M.Add("x", Number(2))
 M.Add("sheila",Boolean(false))
 
 let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
