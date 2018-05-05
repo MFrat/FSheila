@@ -1,2 +1,6 @@
 source https://www.nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
+
+nuget FsUnit
 nuget ScanRat
+nuget System.Reflection.Emit.ILGeneration

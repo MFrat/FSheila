@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+  <metadata>
+    <id>FsUnit</id>
+    <version>3.1.0</version>
+    <authors>Ray Vernagus and Daniel Mohl</authors>
+    <owners>Ray Vernagus and Daniel Mohl</owners>
+    <licenseUrl>http://github.com/fsprojects/FsUnit/blob/master/LICENSE.txt</licenseUrl>
+    <projectUrl>http://github.com/fsprojects/FsUnit</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/fsprojects/FsUnit/master/docs/files/img/logo.png</iconUrl>
+    <description>FsUnit is a set of extensions that add special testing syntax to NUnit.</description>
+    <summary>The goals of FsUnit are to make unit-testing feel more functional while leverage existing testing frameworks.</summary>
+    <releaseNotes>Multi-target .NET Core 2.0 projects
+Fixed "Change shouldBeSmallerThan to fail when passed 2 equal numbers" https://github.com/fsprojects/FsUnit/pull/112
+Added slighly more meaningful messages to a few matchers https://github.com/fsprojects/FsUnit/pull/115
+NuGet package allow to reference FSharp.Core 4.3.x https://github.com/fsprojects/FsUnit/issues/116</releaseNotes>
+    <copyright>Copyright 2012-2018</copyright>
+    <tags>F# fsharp NUnit FsUnit</tags>
+    <dependencies>
+      <group targetFramework="netstandard2.0">
+        <dependency id="NETStandard.Library" version="2.0.1" />
+        <dependency id="NUnit" version="[3.9.0,4.0.0)" />
+        <dependency id="FSharp.Core" version="4.2.3" />
+      </group>
+      <group targetFramework="net46">
+        <dependency id="NUnit" version="[3.9.0,4.0.0)" />
+        <dependency id="FSharp.Core" version="4.2.3" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

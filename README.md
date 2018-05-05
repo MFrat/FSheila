@@ -16,7 +16,7 @@ Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://gi
 
 ## Start Guide
 
-### Prerequisits
+### Prerequisites
 
 * [F# Programming Language](http://fsharp.org/)
 * [ScanRat](https://github.com/pragmatrix/ScanRat) parsing expression grammar for F#
@@ -25,15 +25,21 @@ Authors: [Erick Grilo](https://github.com/simasgrilo/), [Max Fratane](https://gi
 
 ##### P.S.: For further information about systems prerequsits check [.Net Core Guide](https://docs.microsoft.com/en-us/dotnet/core/)
 
-### Build and Run
+### Install, Clean, Build and Run
 
-#### Linux Debian-Based Distros
+#### Install all prerequisites
+
+* Linux Debian-Based Distros ```make install```
+* MacOS ```make install-macos```
+
+#### Clean, build and run
+
 ```
-make install
+make clean
+make build
 make run
 ```
-#### MacOS
+or just
 ```
-make install-macos
 make run
 ```

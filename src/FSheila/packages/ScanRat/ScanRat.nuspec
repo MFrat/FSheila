@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ScanRat</id>
+    <version>0.5.0.0</version>
+    <authors>pragmatrix</authors>
+    <owners>pragmatrix</owners>
+    <projectUrl>https://github.com/pragmatrix/ScanRat</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>ScanRat - F# Parser Combinators with support for Left Recursion and Memoization</description>
+    <tags>parser combinator F# generator parser-generator parser-combinator fsharp</tags>
+    <dependencies />
+  </metadata>
+</package>

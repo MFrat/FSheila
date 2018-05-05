@@ -11,7 +11,8 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Smc.fs" />
-	<Compile Include="Test.fs" />
+	  <Compile Include="Test.fs" />
+    <Compile Include="Tests.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -20,6 +21,12 @@
     <Reference Include="mscorlib" />
     <Reference Include="ScanRat">
       <HintPath>packages/ScanRat/lib/portable-net45+win+wpa81+wp80+MonoAndroid10+xamarinios10+MonoTouch10/ScanRat.dll</HintPath>
+    </Reference>
+    <Reference Include="FsUnit">
+      <HintPath>packages/FsUnit/lib/netstandard2.0/FsUnit.NUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="NUnit">
+      <HintPath>packages/NUnit/lib/netstandard2.0/nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
