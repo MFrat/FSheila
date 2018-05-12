@@ -10,13 +10,13 @@ let S = new Stack<Cmd>()
 let M = new Dictionary<string, Cmd>()
 let C = new Stack<Cmd>()
 
-M.Add("y", Number(1))
-M.Add("x", Number(2))
+M.Add("y", Number(bigint 1))
+M.Add("x", Number(bigint 100))
 M.Add("sheila",Boolean(false))
 
 let rec aKindOfMagic (S: Stack<Cmd>) (M: Dictionary<string, Cmd>) (C: Stack<Cmd>) =
     if C.Count <> 0 then  
-        printSMC S M C
+        //printSMC S M C
         let op = C.Pop()
         match op with
         //Default cases

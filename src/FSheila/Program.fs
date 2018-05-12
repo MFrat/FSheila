@@ -17,13 +17,13 @@ let main argv =
                                            x := x - 1;
                                            sheila := y > x and x > 0
                                            }"
-    let fat = parse testGrammar.generalRule "while ~(x == 0) {
-y := y + 1;
-x := x - 1;
-sheila := false}"
+    let fat2 = parse testGrammar.generalRule "while ~(x == 0) {
+                                                    y := y + 1;
+                                                    x := x - 1;
+                                                    sheila := false}"
     let teste = parse testGrammar.varRule "var x , y , sheila, xsheila"
     let teste2 = parse testGrammar.constRule "const x, y , sjsj, lee"
-    printfn "%A" teste2
+    //printfn "%A" teste2
     getFromParser fat
     aKindOfMagic S M C
     printSMC S M C

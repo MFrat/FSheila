@@ -23,7 +23,7 @@ type Cmd =
          | Geb of Cmd * Cmd
          | Geq of Cmd * Cmd
          | Neq of Cmd * Cmd
-         | Number of int
+         | Number of bigint
          | Boolean of bool
          | Id of string
          | CmdAdd
@@ -50,7 +50,7 @@ type PEGParser () =
         member this.whitespace = (~~" ").oneOrMore
         member this.linebreak = (~~"\r\n").oneOrMore
 
-        member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int
+        member this.posNumber =  (oneOf "0123456789").oneOrMore --> fun l -> System.String.Concat(l) |> int |> bigint
         member this.negNumber = this.whitespace.oneOrMore.opt +. ~~"(" + ~~"-" +. this.posNumber .+ ~~")" .+ this.whitespace.oneOrMore.opt --> fun a -> -a
                                 |- this.whitespace.oneOrMore.opt +. ~~"-" +. this.posNumber .+ this.whitespace.oneOrMore.opt--> fun a -> -a
 
