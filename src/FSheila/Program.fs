@@ -21,12 +21,13 @@ let main argv =
                                                     y := y + 1;
                                                     x := x - 1;
                                                     sheila := false}"
-    let teste = parse testGrammar.varRule "var x , y , sheila, xsheila"
+    let teste = parse testGrammar.varRule "var x , y , sheila, xsheila, xvideos"
     let teste2 = parse testGrammar.constRule "const x, y , sjsj, lee"
-    //printfn "%A" teste2
-    getFromParser fat
-    aKindOfMagic S M C
-    printSMC S M C
+    
+    printfn "%A" teste
+    //getFromParser fat
+    //aKindOfMagic S M C
+    //printSMC S M C
     
     let sheila = Console.ReadLine()
     printfn "%A" sheila

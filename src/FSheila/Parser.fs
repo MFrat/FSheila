@@ -4,9 +4,6 @@ open ScanRat
 
 type Cmd =
          //id é apenas uma string que representa o nome da variável
-         | Var of string
-         | Assign of string * Cmd
-         | Init of string * Cmd
          | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
          | Loop of Cmd * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
          | Seq of Cmd * Cmd
@@ -42,7 +39,17 @@ type Cmd =
          | CmdAssign
          | CmdIf
          | CmdLoop
-         //| Block of Cmd //added p/ tentar fazer o if funcionar com o uso de blocos de comando.
+         //novos tipos para a P2.
+         | Var of string
+         | ManyVars of list<string>
+         | Const of string
+         | ManyConsts of list<string>
+         | Assign of string * Cmd
+         | Init of string * Cmd
+         | CmdInit
+         | CmdVar //Talvez precisemos de dois tipos distintos para var e const por possuírem uma semântica diferente.
+         | CmdConst
+         | Empty //o tipo empty serve como controle para o caso de uma sequência de const/var vir vazia. Ou seja, só ocorreu no máximo um var (ou um assign) ou não, talvez não sirva para nada.
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -146,22 +153,26 @@ type PEGParser () =
         member this.varRule = 
                let var = production "var"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depoi da keyword "var"
-               let oneVar = ~~"var" + (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt)
+               let oneVar = ~~"var" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) --> Var
                let moreVars =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
                var.rule
-                  <- oneVar + moreVars.oneOrMore.opt
+                  <- oneVar + (moreVars.oneOrMore.opt  --> fun l -> match l with
+                                                                    | None -> Empty
+                                                                    | Some x -> ManyVars x)
                var
 
         member this.constRule = 
                let constAtr = production "const"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depois da keyword "const"
-               let oneConst = ~~"const" + (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt)
-               let moreConsts =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+               let oneConst = ~~"const" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt) --> Const
+               let moreConsts =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) 
                constAtr.rule
-                  <- oneConst + moreConsts.oneOrMore.opt
+                  <- oneConst + (moreConsts.oneOrMore.opt --> fun l -> match l with
+                                                                       | None -> Empty //ManyConsts []
+                                                                       | Some x -> ManyConsts x) //oh god
                constAtr
 
-        member this.initRule =
+        member this.initRule = //obs: init incompleto.
              let boole = this.boolOp //--> Boolexp
              let numExp = this.calcOp //|- boole
              //let boolEx = 
@@ -227,5 +238,7 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  this.whitespace.oneOrMore  + this.command --> Loop
+        
+        member this.programRule = 555
         
         member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
