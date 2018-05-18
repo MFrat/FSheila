@@ -4,6 +4,8 @@
 
 # FSheila
 
+[![Build Status](https://travis-ci.org/MFrat/FSheila.svg?branch=master)](https://travis-ci.org/MFrat/FSheila)
+
 >FSheila is a compiler in F# for [IMP Programming Language](https://github.com/ChristianoBraga/BPLC/blob/master/examples/imp/README.md).
 
 ## Overview
