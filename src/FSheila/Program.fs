@@ -13,9 +13,7 @@ let main argv =
     printIntro
     let testGrammar = new PEGParser()
     let eSMC = new ESMC()
-    eSMC.M.Add("y", Number(bigint 1))
-    eSMC.M.Add("x", Number(bigint 10))
-    eSMC.M.Add("sheila",Boolean(false))
+    
     let fat = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
                                            x := x - 1;
@@ -29,9 +27,10 @@ let main argv =
     let teste2 = parse testGrammar.constRule "const x, y , sjsj, lee"
     
     //printfn "%A" teste
+    eSMC.fillMemory
     getFromParser fat eSMC
     eSMC.aKindOfMagic
-    printSMC eSMC.S eSMC.M eSMC.C
+    eSMC.print
     
     let sheila = Console.ReadLine()
     printfn "%A" sheila
