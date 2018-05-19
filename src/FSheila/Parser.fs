@@ -40,10 +40,13 @@ type Cmd =
          | CmdIf
          | CmdLoop
          //novos tipos para a P2.
+         | SeqDec of Cmd * Cmd //sequência de declarações. Provavelmente a lista vai sair.
          | Var of string
-         | ManyVars of list<string>
+         | VarInit of string * Cmd
+         | SeqVars of Cmd * Cmd //seqûência de vars na mesma linha.
          | Const of string
-         | ManyConsts of list<string>
+         | ConstInit of string * Cmd
+         | SeqConsts of Cmd * Cmd
          | Assign of string * Cmd
          | Init of string * Cmd
          | CmdInit
@@ -153,24 +156,45 @@ type PEGParser () =
         member this.varRule = 
                let var = production "var"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depoi da keyword "var"
-               let oneVar = ~~"var" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) --> Var
-               let moreVars =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+               let oneVarInit = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt) --> VarInit
+                                 |- (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.id --> Id) .+ this.whitespace.oneOrMore.opt) --> VarInit 
                var.rule
-                  <- oneVar + (moreVars.oneOrMore.opt  --> fun l -> match l with
-                                                                    | None -> Empty
-                                                                    | Some x -> ManyVars x)
+                  <- oneVarInit
                var
 
+        member this.seqVarRule =  
+               let seqVarRule = production "seqVarRule"
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.varRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> SeqVars (a,b)
+               seqVarRule.rule
+                  <-  (seq |- this.varRule)
+               seqVarRule
+
+        member this.realSeqVarRule = ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
+
+         
         member this.constRule = 
                let constAtr = production "const"
                //segundo a regra abaixo eu forço ter pelo menos um espaço depois da keyword "const"
-               let oneConst = ~~"const" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt) --> Const
-               let moreConsts =  ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) 
+               let oneConstInit = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt) --> ConstInit
+                                  |- (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.id --> Id) .+ this.whitespace.oneOrMore.opt) --> ConstInit
                constAtr.rule
-                  <- oneConst + (moreConsts.oneOrMore.opt --> fun l -> match l with
-                                                                       | None -> Empty //ManyConsts []
-                                                                       | Some x -> ManyConsts x) //oh god
+                  <- oneConstInit
                constAtr
+
+        member this.seqConstRule =  
+               let seqConstRule = production "seqConstRule"
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.constRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqConstRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> SeqVars (a,b)
+               seqConstRule.rule
+                  <- (seq |- this.constRule)
+               seqConstRule
+
+         member this.realSeqConstRule = ~~"const" +. this.seqConstRule .+ this.linebreak.oneOrMore.opt
+
+        member this.decRule = 
+               let decRule = production "decRule"
+               decRule.rule
+                  <- (this.realSeqConstRule |- this.realSeqVarRule) |- (this.realSeqConstRule |- this.realSeqVarRule)
+               decRule
 
         member this.initRule = //obs: init incompleto.
              let boole = this.boolOp //--> Boolexp
@@ -238,7 +262,5 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  this.whitespace.oneOrMore  + this.command --> Loop
-        
-        member this.programRule = 555
         
         member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp

@@ -23,14 +23,19 @@ let main argv =
                                                     y := y + 1;
                                                     x := x - 1;
                                                     sheila := false}"
-    let teste = parse testGrammar.varRule "var x , y , sheila, xsheila, xvideos"
-    let teste2 = parse testGrammar.constRule "const x, y , sjsj, lee"
+    let teste = parse testGrammar.realSeqVarRule "var x = sheila * xsheila"
+    let teste2 = parse testGrammar.realSeqConstRule "const x = aaaaaa" //, y , sjsj, lee"
+    let teste3 = parse testGrammar.realSeqVarRule "var x = 3 , xsxs = kkkk + 4, aaaaaa = 0, bbbbb = false, aa = x * 4"
+    let teste4 = parse testGrammar.realSeqConstRule "const x = burger , xsxs = sheila / 4 , eeee = xhub"
+    //let teste5 = parse testGrammar.decRule "const x , xsxs = sheila / 4 , eeee
+    //                                        var x"
     
-    //printfn "%A" teste
-    eSMC.fillMemory
-    getFromParser fat eSMC
-    eSMC.aKindOfMagic
-    eSMC.print
+    printfn "%A" teste4
+    //eSMC.fillMemory
+    //getFromParser fat eSMC
+    //eSMC.aKindOfMagic
+    //eSMC.print
+
     
     let sheila = Console.ReadLine()
     printfn "%A" sheila
