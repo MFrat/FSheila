@@ -9,7 +9,7 @@ mono: none
 
 branches:
   only:
-    - version/linux
+    - master
 
 script:
   - make build
