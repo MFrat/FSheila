@@ -40,11 +40,11 @@ type Cmd =
          | CmdIf
          | CmdLoop
          //novos tipos para a P2.
-         | SeqDec of Cmd * Cmd //sequência de declarações. Provavelmente a lista vai sair.
-         | Var of string
+         | SeqDec of Cmd * Cmd //sequência de declarações. Uma regra que tem um var seguido de const, ex. Pra isso, uma regra correspondente tem que ser criada no parser
+         //| Var of string
          | VarInit of string * Cmd
          | SeqVars of Cmd * Cmd //seqûência de vars na mesma linha.
-         | Const of string
+         //| Const of string
          | ConstInit of string * Cmd
          | SeqConsts of Cmd * Cmd
          | Assign of string * Cmd
@@ -169,7 +169,7 @@ type PEGParser () =
                   <-  (seq |- this.varRule)
                seqVarRule
 
-        member this.realSeqVarRule = ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
+        member this.realSeqVarRule = this.linebreak.oneOrMore.opt +. ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
 
          
         member this.constRule = 
@@ -188,13 +188,15 @@ type PEGParser () =
                   <- (seq |- this.constRule)
                seqConstRule
 
-         member this.realSeqConstRule = ~~"const" +. this.seqConstRule .+ this.linebreak.oneOrMore.opt
+        member this.realSeqConstRule =  this.linebreak.oneOrMore.opt +. ~~"const" +. this.seqConstRule .+ this.linebreak.oneOrMore.opt
 
-        member this.decRule = 
-               let decRule = production "decRule"
-               decRule.rule
-                  <- (this.realSeqConstRule |- this.realSeqVarRule) |- (this.realSeqConstRule |- this.realSeqVarRule)
-               decRule
+        member this.seqDecRule =  ((this.realSeqConstRule .+ ~~";" + this.realSeqVarRule) |- (this.realSeqVarRule .+ ~~";" + this.realSeqConstRule)) --> SeqDec //bugada
+
+        //member this.decRule = 
+        //       let decRule = production "decRule"
+        //       decRule.rule
+        //          <- (this.realSeqConstRule |- this.realSeqVarRule) |- (this.realSeqConstRule |- this.realSeqVarRule)
+        //       decRule
 
         member this.initRule = //obs: init incompleto.
              let boole = this.boolOp //--> Boolexp
