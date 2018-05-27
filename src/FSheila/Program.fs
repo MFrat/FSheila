@@ -32,12 +32,22 @@ let main argv =
     let teste6 = parse testGrammar.cmdBlockRule "{ y := y * x;
                                                 x := x - 1;
                                                 sheila := y > x and x > 0 }"
+
     let teste7 = parse testGrammar.realSeqVarRule "var x = videos, y = sheila, zu = 4*gh"
     let teste8 = parse testGrammar.decRule "var x = videos, y = sheila, zu = 4*gh;
-                                            const sheila = 39393;
-                                            var aaasdasd = 45858" //NOTA: estranho mas funciona.
+                                            const asdasd = 34"  //esse caso não é permitido por construção. Se um bloco é criado 
+                                                                //(por alguma declaração, necessariamente ele deve ter um ou mais comandos seguidos (ou uma declaração)
+    let teste8 = parse testGrammar.generalRule "var x = videos, y = sheila, zu = 4*gh;
+                                            const asdasd = 34;
+                                            xvideos := 4;
+                                            xsheila := xvideos * xvideos
+                                            while ~(x == 0) {
+                                                    y := y + 1;
+                                                    x := x - 1;
+                                                    sheila := false}
+                                            "
     
-    //printfn "%A" teste7
+    //printfn "%A" teste8
     let x r =
         match r with 
         | Success k -> printfn "Input = %A" k.value;

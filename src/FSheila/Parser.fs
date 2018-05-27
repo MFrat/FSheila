@@ -53,8 +53,8 @@ type Cmd =
          //novos tipos p controle de blocos
          | VarBlock of Cmd * Cmd //bloco declarado por declaração de var
          | ConstBlock of Cmd * Cmd //bloco declarado por declaração de const.
-         | Block of Cmd * Cmd
-         | Empty //usado p/ quanado há somente um bloco
+         | Block of Cmd * Cmd //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
+         //| Empty //usado p/ quanado há somente um bloco (no longer needed)
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -120,7 +120,6 @@ type PEGParser () =
              let boolean = this.whitespace.oneOrMore.opt +. this.booleanType  .+ this.whitespace.oneOrMore.opt --> Boolean
              let number = this.number --> Number
              let id = this.id --> Id
-             //se não me engano and tem precedência sobre or.
              let ourAnd = (this.whitespace.oneOrMore.opt +. (boolean |- andOp) .+ this.whitespace.oneOrMore.opt) .+ ~~"and" + (this.whitespace.oneOrMore.opt +. (boolean |- orOp) .+ this.whitespace.oneOrMore.opt) --> And
              let ourOr = (this.whitespace.oneOrMore.opt +. andOp .+ this.whitespace.oneOrMore.opt) .+ ~~"or" + (this.whitespace.oneOrMore.opt +. orOp .+ this.whitespace.oneOrMore.opt) --> Or
              let ourNeg = this.whitespace.oneOrMore.opt + ~~"~" +. (boolean |- id) --> Neg
@@ -169,7 +168,9 @@ type PEGParser () =
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.varRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
                seqVarRule.rule
                   <-  seq
-                      |- this.varRule --> fun a -> VarBlock(a,Empty)
+                      |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)  +  this.realSeqConstRule --> VarBlock
+                      |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> VarBlock //fun a -> VarBlock(a,Empty)
+                     
                seqVarRule
 
         member this.realSeqVarRule = this.linebreak.oneOrMore.opt +. ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
@@ -189,9 +190,9 @@ type PEGParser () =
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.constRule) .+ this.whitespace.oneOrMore.opt) .+ ~~"," + 
                          ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqConstRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> ConstBlock (a,b)
                seqConstRule.rule
-                  <- seq |- 
-                  this.constRule --> fun a -> ConstBlock(a,Empty)
-                  |- this.constRule + this.cmdBlockRule --> ConstBlock
+                  <- seq 
+                  |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> ConstBlock
+                  
                seqConstRule
 
         member this.realSeqConstRule =  this.linebreak.oneOrMore.opt +. ~~"const" +. this.seqConstRule .+ this.linebreak.oneOrMore.opt
@@ -263,7 +264,7 @@ type PEGParser () =
                let seqRule = production "seqRule"
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. command .+ this.whitespace.oneOrMore.opt) .+ ~~";" + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqRule .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <- seq |- command 
+                  <-  (seq |- command)
                seqRule
 
         //regra do bloco de comandos, parece estar 100%
@@ -284,8 +285,9 @@ type PEGParser () =
                 //let moreBlocks
                 blockRule.rule
                     <-    //block .+ ~~"{" + block --> Block 
-                       block --> fun a -> Block(a, Empty)
-                       |- this.realSeqVarRule
+                       //block --> fun a -> Block(a, Empty)
+                       block |- 
+                       this.realSeqVarRule
                        //|- block +  blockRule --> Block 
                        |- this.seqRule 
                        //|- blockRule
@@ -296,6 +298,13 @@ type PEGParser () =
 
         //de loop só tem o while na documentação da IMP:
         member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
-                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  this.whitespace.oneOrMore  + this.command --> Loop
+                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  
+                               this.whitespace.oneOrMore  + this.command --> Loop
         
-        member this.generalRule =  this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
+        member this.generalRule =  this.decRule + this.ifRule //--> Block
+                                   |- this.decRule + this.loopRule //--> Block  //|- this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
+
+
+
+
+
