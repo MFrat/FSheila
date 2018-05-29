@@ -1,6 +1,7 @@
 ﻿module FSheila.Parser
 
 open ScanRat
+open System.Collections.Generic
 
 type Cmd =
          //id é apenas uma string que representa o nome da variável
@@ -54,7 +55,13 @@ type Cmd =
          | VarBlock of Cmd * Cmd //bloco declarado por declaração de var
          | ConstBlock of Cmd * Cmd //bloco declarado por declaração de const.
          | Block of Cmd * Cmd //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
+         | CmdVarBlock
+         | CmdConstBlock
+         | CmdBlock
          //| Empty //usado p/ quanado há somente um bloco (no longer needed)
+         //gambiarras
+         | CmdDict of Dictionary<string, Cmd>
+         | Location of int
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -301,8 +308,9 @@ type PEGParser () =
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  
                                this.whitespace.oneOrMore  + this.command --> Loop
         
-        member this.generalRule =  this.decRule + this.ifRule //--> Block
-                                   |- this.decRule + this.loopRule //--> Block  //|- this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
+        member this.generalRule =  //this.decRule + this.ifRule //--> Block
+                                   //|- this.decRule + this.loopRule //--> Block  
+                                   this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
 
 
 

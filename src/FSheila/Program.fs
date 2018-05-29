@@ -16,8 +16,7 @@ let main argv =
     
     let fat = parse testGrammar.generalRule "while ~(x == 0) {
                                            y := y * x;
-                                           x := x - 1;
-                                           sheila := y > x and x > 0
+                                           x := x - 1
                                            }"
     let fat2 = parse testGrammar.generalRule "while ~(x == 0) {
                                                     y := y + 1;
@@ -46,17 +45,17 @@ let main argv =
                                                     x := x - 1;
                                                     sheila := false}
                                             "
-    
+    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; x := x-1"
     //printfn "%A" teste8
-    let x r =
-        match r with 
-        | Success k -> printfn "Input = %A" k.value;
-        | Failure x -> printfn "%A" x.index
-    x teste8
-    //eSMC.fillMemory
-    //getFromParser fat eSMC
-    //eSMC.aKindOfMagic
-    //eSMC.print
+    //let x r =
+    //    match r with 
+    //    | Success k -> printfn "Input = %A" k.value;
+    //    | Failure x -> printfn "%A" x.index
+    //x teste8
+    eSMC.fillMemory
+    getFromParser testeErickQuebrado eSMC
+    eSMC.aKindOfMagic
+    eSMC.print
 
     
     let sheila = Console.ReadLine()
