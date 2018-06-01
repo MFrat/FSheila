@@ -28,7 +28,7 @@ let main argv =
     //let teste4 = parse testGrammar.realSeqConstRule "const x = burger , xsxs = sheila / 4 , eeee = xhub"
     //let teste5 = parse testGrammar.seqDecRule "const x = 4 , xsxs = sheila / 4 , eeee = true ;
     //                                           var x = videos"
-    let teste6 = parse testGrammar.cmdBlockRule "{ y := y * x;
+    let teste6 = parse testGrammar.XBlockRule "{ y := y * x;
                                                 x := x - 1;
                                                 sheila := y > x and x > 0 }"
 
@@ -45,14 +45,14 @@ let main argv =
                                                     x := x - 1;
                                                     sheila := false}
                                             "
-    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick - 2"
+    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick + 2"
     //printfn "%A" teste8
     //let x r =
     //    match r with 
     //    | Success k -> printfn "Input = %A" k.value;
     //    | Failure x -> printfn "%A" x.index
     //x teste8
-    //eSMC.fillMemory
+    //eSMC.fillEnviroment
     getFromParser testeErickQuebrado eSMC
     eSMC.aKindOfMagic
     eSMC.print

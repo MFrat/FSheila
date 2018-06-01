@@ -3,65 +3,69 @@
 open ScanRat
 open System.Collections.Generic
 
-type Cmd =
-         //id é apenas uma string que representa o nome da variável
-         | If of Cmd * Cmd * Cmd //boolCmd vira Cmd
-         | Loop of Cmd * Cmd // Cmd list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
-         | Seq of Cmd * Cmd
-         | Add of Cmd * Cmd
-         | Subtract of Cmd * Cmd
-         | Multiply of Cmd * Cmd
-         | Divide of Cmd * Cmd
-         | And of Cmd * Cmd
-         | Or of Cmd * Cmd
-         | Neg of Cmd
-         | Eq of  Cmd * Cmd
-         | Leb of Cmd * Cmd
-         | Leq of Cmd * Cmd
-         | Geb of Cmd * Cmd
-         | Geq of Cmd * Cmd
-         | Neq of Cmd * Cmd
+type Tipao =
+         //Basic typos
          | Number of bigint
          | Boolean of bool
          | Id of string
-         | CmdAdd
-         | CmdSubtract
-         | CmdDivide 
-         | CmdMultiply 
-         | CmdAnd  
-         | CmdOr  
-         | CmdNeg  
-         | CmdEq  
-         | CmdLeb  
-         | CmdLeq 
-         | CmdGeb 
-         | CmdGeq 
-         | CmdNeq
-         | CmdAssign
-         | CmdIf
-         | CmdLoop
-         //novos tipos para a P2.
-         | SeqDec of Cmd * Cmd //sequência de declarações. Uma regra que tem um var seguido de const, ex. Pra isso, uma regra correspondente tem que ser criada no parser
-         | VarInit of string * Cmd
-         | DclVars of Cmd //seqûência de vars na mesma linha.
-         | ConstInit of string * Cmd
-         | DclConsts of Cmd
-         | Assign of string * Cmd
-         | Init of string * Cmd
-         | CmdInit
-         | CmdVar //Talvez precisemos de dois tipos distintos para var e const por possuírem uma semântica diferente.
-         | CmdConst
-         //novos tipos p controle de blocos
-         | VarBlock of Cmd * Cmd //bloco declarado por declaração de var
-         | ConstBlock of Cmd * Cmd //bloco declarado por declaração de const.
-         | Block of Cmd * Cmd //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
-         | CmdVarBlock
-         | CmdConstBlock
-         | CmdBlock
-         //| Empty //usado p/ quanado há somente um bloco (no longer needed)
-         //gambiarras
-         | CmdEnviroment of Dictionary<string, Cmd>
          | Location of int
+         //Commands
+         | Add of Tipao * Tipao
+         | Subtract of Tipao * Tipao
+         | Multiply of Tipao * Tipao
+         | Divide of Tipao * Tipao
+         | And of Tipao * Tipao
+         | Or of Tipao * Tipao
+         | Neg of Tipao
+         | Eq of  Tipao * Tipao
+         | Leb of Tipao * Tipao
+         | Leq of Tipao * Tipao
+         | Geb of Tipao * Tipao
+         | Geq of Tipao * Tipao
+         | Neq of Tipao * Tipao
+         | If of Tipao * Tipao * Tipao //boolTipao vira Tipao
+         | Loop of Tipao * Tipao // Tipao list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | Seq of Tipao * Tipao
+         //Commands' orders
+         | XAdd
+         | XSubtract
+         | XDivide 
+         | XMultiply 
+         | XAnd  
+         | XOr  
+         | XNeg  
+         | XEq  
+         | XLeb  
+         | XLeq 
+         | XGeb 
+         | XGeq 
+         | XNeq
+         | XIf
+         | XLoop
+         // (novos tipos para a P2.)
+         | Assign of string * Tipao
+         | XAssign
+         //Declarations
+         | DclConsts of Tipao
+         | DclVars of Tipao //seqûência de vars na mesma linha.
+         | ConstInit of string * Tipao
+         | VarInit of string * Tipao
+         | Init of string * Tipao
+         | SeqDec of Tipao * Tipao //sequência de declarações. Uma regra que tem um var seguido de const, ex. Pra isso, uma regra correspondente tem que ser criada no parser
+         | Block of Tipao * Tipao //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
+         | VarBlock of Tipao * Tipao //bloco declarado por declaração de var
+         | ConstBlock of Tipao * Tipao //bloco declarado por declaração de const.
+         //Declarations' orders
+         | XVar //Talvez precisemos de dois tipos distintos para var e const por possuírem uma semântica diferente.
+         | XConst
+         | XInit
+         //novos tipos p controle de blocos
+         | XVarBlock
+         | XConstBlock
+         | XBlock
+         //| Empty //usado p/ quanado há somente um bloco (no longer needed)
+         | XEnviroment of Dictionary<string, Tipao> //para desempilhar
+         
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC
@@ -217,7 +221,7 @@ type PEGParser () =
                   |- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
                   (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.realSeqConstRule) --> Seq
                   //|- (decRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
-                  //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.cmdBlockRule) --> Seq
+                  //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.XBlockRule) --> Seq
 
                   //|- (this.realSeqConstRule .+ ~~";" +  this.realSeqVarRule) --> Seq 
                   |- this.realSeqConstRule |- this.realSeqVarRule
@@ -254,7 +258,7 @@ type PEGParser () =
                //let command = this.assignRule
                //adicionado parentização no "if"
                let boolExp = (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt )
-               let block = this.cmdBlockRule
+               let block = this.XBlockRule
 
                let ifRule = production "ifRule"
                let aIf = ~~"if" +. boolExp + this.command .+ ~~"else" + this.command --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
@@ -283,9 +287,9 @@ type PEGParser () =
         //              |- (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (this.realSeqVarRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)
         //               |- this.assignRule
         //        blockRule
-        member this.command = this.cmdBlockRule
+        member this.command = this.XBlockRule
 
-        member this.cmdBlockRule = //fuck
+        member this.XBlockRule = //fuck
                 let blockRule = production "blockRule"
                 //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
                 let block = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (blockRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) //--> Block 
