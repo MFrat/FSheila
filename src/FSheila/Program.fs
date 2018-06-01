@@ -45,14 +45,14 @@ let main argv =
                                                     x := x - 1;
                                                     sheila := false}
                                             "
-    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; x := x-1"
+    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick - 2"
     //printfn "%A" teste8
     //let x r =
     //    match r with 
     //    | Success k -> printfn "Input = %A" k.value;
     //    | Failure x -> printfn "%A" x.index
     //x teste8
-    eSMC.fillMemory
+    //eSMC.fillMemory
     getFromParser testeErickQuebrado eSMC
     eSMC.aKindOfMagic
     eSMC.print

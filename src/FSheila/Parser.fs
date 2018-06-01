@@ -60,7 +60,7 @@ type Cmd =
          | CmdBlock
          //| Empty //usado p/ quanado há somente um bloco (no longer needed)
          //gambiarras
-         | CmdDict of Dictionary<string, Cmd>
+         | CmdEnviroment of Dictionary<string, Cmd>
          | Location of int
 
 type PEGParser () = 
