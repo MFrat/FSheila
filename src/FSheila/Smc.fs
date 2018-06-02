@@ -85,7 +85,9 @@ type ESMC() =
             //Default cases
             | Number x -> S.Push(Number(x))
             | Boolean x -> S.Push(Boolean(x))
-            | Id x -> S.Push(M.Item(E.Item(string x)))
+            | Id x -> match E.Item(string x) with 
+                | Location y -> S.Push(M.Item(Location y))
+                | _ -> S.Push(E.Item(string x))
             //Operations
             | Add (x,y) -> C.Push(XAdd); C.Push(y); C.Push(x)
             | Subtract (x,y) -> C.Push(XSubtract); C.Push(y); C.Push(x)

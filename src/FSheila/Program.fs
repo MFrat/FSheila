@@ -45,9 +45,13 @@ let main argv =
                                                     x := x - 1;
                                                     sheila := false}
                                             "
+
     let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick + 2"
     let testeErickNaoQuebrado = parse testGrammar.decRule "var erick = 1; const a = 1; erick := erick - 2"
     let testeErickNaoQuebrado = parse testGrammar.decRule "const a = 1; var erick = 1; erick := erick - 2"
+
+    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; const a = 2; erick := a + erick"
+
     //printfn "%A" teste8
     //let x r =
     //    match r with 
