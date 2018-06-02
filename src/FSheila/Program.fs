@@ -46,14 +46,16 @@ let main argv =
                                                     sheila := false}
                                             "
     let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick + 2"
+    let testeErickNaoQuebrado = parse testGrammar.decRule "var erick = 1; const a = 1; erick := erick - 2"
+    let testeErickNaoQuebrado = parse testGrammar.decRule "const a = 1; var erick = 1; erick := erick - 2"
     //printfn "%A" teste8
     //let x r =
     //    match r with 
     //    | Success k -> printfn "Input = %A" k.value;
     //    | Failure x -> printfn "%A" x.index
     //x teste8
-    //eSMC.fillEnviroment
-    getFromParser testeErickQuebrado eSMC
+    eSMC.fillEnviroment
+    getFromParser testeErickNaoQuebrado eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
