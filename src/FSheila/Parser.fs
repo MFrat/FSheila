@@ -46,8 +46,8 @@ type Tipao =
          | Assign of string * Tipao
          | XAssign
          //Declarations
-         | DclConsts of Tipao
-         | DclVars of Tipao //seqûência de vars na mesma linha.
+         //| DclConsts of Tipao
+         //| DclVars of Tipao //seqûência de vars na mesma linha.
          | ConstInit of string * Tipao
          | VarInit of string * Tipao
          | Init of string * Tipao
@@ -55,6 +55,7 @@ type Tipao =
          | Block of Tipao * Tipao //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
          | VarBlock of Tipao * Tipao //bloco declarado por declaração de var
          | ConstBlock of Tipao * Tipao //bloco declarado por declaração de const.
+         | Empty
          //Declarations' orders
          | XVar //Talvez precisemos de dois tipos distintos para var e const por possuírem uma semântica diferente.
          | XConst
@@ -64,7 +65,7 @@ type Tipao =
          | XConstBlock
          | XBlock
          //| Empty //usado p/ quanado há somente um bloco (no longer needed)
-         | XEnviroment of Dictionary<string, Tipao> //para desempilhar
+         | Enviroment of Dictionary<string, Tipao> //para desempilhar
          
 
 type PEGParser () = 
@@ -163,25 +164,21 @@ type PEGParser () =
              andOp
 
 
-        //commands:
-        //funciona, mas não sei se é o ideal: abaixo a regra de parsing de var <ident>^+
+
         member this.varRule = 
                //segundo a regra abaixo eu forço ter pelo menos um espaço depoi da keyword "var"
                (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> (VarInit(a,b)) //VarBlock não vem aqui
-                                 |- (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.id --> Id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) ->  (VarInit(a,b)) //VarBlock não vem aqui
+               |- (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (this.id --> Id) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) ->  (VarInit(a,b)) //VarBlock não vem aqui
 
         member this.seqVarRule =  
                let seqVarRule = production "seqVarRule"
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.varRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
                seqVarRule.rule
-                  <-  seq |- this.varRule
-                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)  +  this.realSeqConstRule --> VarBlock
-                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> VarBlock //fun a -> VarBlock(a,Empty)
-                      //|- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)  +  this.realSeqVarRule --> ConstBlock
-                      //|- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)  +  this.realSeqConstRule --> ConstBlock
-                      
-                     
+                  <-  seq 
+                      |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> VarBlock
+                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.realSeqConstRule--> VarBlock
+                      //|- this.varRule 
                seqVarRule
 
         member this.realSeqVarRule = this.linebreak.oneOrMore.opt +. ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
@@ -197,37 +194,40 @@ type PEGParser () =
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.constRule) .+ this.whitespace.oneOrMore.opt) .+ ~~"," + 
                          ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqConstRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> ConstBlock (a,b)
                seqConstRule.rule
-                  <- seq |- this.constRule
-                  //|- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)  +  this.realSeqConstRule --> ConstBlock
-                  //|- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> ConstBlock
+                  <- seq 
+                  |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> ConstBlock
+                  |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.realSeqVarRule --> ConstBlock
+                 
                   
                seqConstRule
 
         member this.realSeqConstRule =  this.linebreak.oneOrMore.opt +. ~~"const" +. this.seqConstRule .+ this.linebreak.oneOrMore.opt
 
-        member this.decRule = //sequência de declarações.
-               let decRule = production "decRule"
-               decRule.rule
-                  <- //não sei se precisa criar uma sequência específica aqui.
-                  (this.realSeqVarRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
-                  (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.seqRule) --> VarBlock
-                  |- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
-                  (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.seqRule) --> ConstBlock
+
+        member this.decRule = this.realSeqVarRule |- this.realSeqConstRule
+        //member this.decRule = //sequência de declarações.
+        //       let decRule = production "decRule"
+        //       decRule.rule
+        //          <- //não sei se precisa criar uma sequência específica aqui.
+        //           (this.realSeqVarRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
+        //          (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.realSeqConstRule) --> VarBlock
+        //          |- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
+        //          (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.realSeqVarRule) --> ConstBlock //decRule) --> ConstBlock
+                  //|- (this.realSeqVarRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
+                  //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.seqRule) --> VarBlock
+                  //|- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
+                  //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.seqRule) --> ConstBlock
                   //|- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
                   //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.realSeqConstRule) --> ConstBlock
                   //|- (decRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
                   //(this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + this.XBlockRule) --> Seq
-                  |- (this.realSeqVarRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
-                  (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + decRule) --> VarBlock
-                  |- (this.realSeqConstRule .+ (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) .+ ~~";" .+ 
-                  (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) + decRule) --> ConstBlock
-                  |- this.realSeqVarRule |- this.realSeqConstRule
-               decRule
+                 
+         //         |- this.realSeqVarRule |- this.realSeqConstRule
+         //      decRule
 
         member this.initRule = //obs: init incompleto.
              let boole = this.boolOp //--> Boolexp
              let numExp = this.calcOp //|- boole
-             //let boolEx = 
              let initRule = production "initRule"
              let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
              let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
@@ -241,39 +241,41 @@ type PEGParser () =
          
 
         //regra do assign
-        member this.assignRule =
-             let boole = this.boolOp 
-             let numExp = this.calcOp
-             let assignRule = production "assignRule"
-             let oneAssignExp = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" + (this.whitespace.oneOrMore +. (numExp |- boole) .+ this.whitespace.oneOrMore.opt) --> Assign
-             assignRule.rule
-                <- ( oneAssignExp) //+ moreAssigns.oneOrMore.opt)
-             assignRule
-         
+        member this.assignRule = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" 
+                                 + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt)  .+ ~~";" --> Assign
 
         member this.ifRule =
                //let command = this.assignRule
                //adicionado parentização no "if"
-               let boolExp = (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt )
-               let block = this.XBlockRule
-
-               let ifRule = production "ifRule"
-               let aIf = ~~"if" +. boolExp + this.command .+ ~~"else" + this.command --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
-               let aIfBlock =  ~~"if" +. boolExp + block .+ ~~"else" + this.command  -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
-               let aIfBlock2 =  ~~"if" +. boolExp + this.command .+ ~~"else" + block --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
-               let aIfBlock3 = ~~"if" +. boolExp + block .+ ~~"else" + block -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
-               ifRule.rule
-                     <- (aIf |- aIfBlock |- aIfBlock2 |- aIfBlock3)
-               ifRule
+               ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + 
+                         this.assignRule.+ ~~"else" + this.assignRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + this.XBlockRule .+ ~~"else" +
+                         this.assignRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) +
+                         this.assignRule .+ ~~"else" + this.XBlockRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) 
+               + this.XBlockRule .+ ~~"else" + this.XBlockRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
         //regra de sequência (aparentemente 100%)
         //NOTA: na semântica de seq manter a ordem de execução de forma consistente (não sair empilhando descaradamente para depois resolver)
+        //member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
+        //       let command = this.assignRule 
+        //       let seqRule = production "seqRule"
+        //       let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (command) .+ this.whitespace.oneOrMore.opt) 
+        //                 + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+        //       seqRule.rule
+        //          <-  seq |- command
+        //       seqRule
+
         member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
-               let command =  this.assignRule
                let seqRule = production "seqRule"
-               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. command .+ this.whitespace.oneOrMore.opt) .+ ~~";" + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqRule .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule ) .+ this.whitespace.oneOrMore.opt) 
+                         + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <-  (seq |- command)
+                  <-  seq |- this.assignRule
                seqRule
+
+        member this.realExecRule = this.realSeqVarRule |- this.realSeqConstRule |-  this.seqRule |- this.ifRule |- this.loopRule 
+
 
         //regra do bloco de comandos, parece estar 100%
         //member this.blockRule = 
@@ -284,34 +286,44 @@ type PEGParser () =
         //              |- (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (this.realSeqVarRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)
         //               |- this.assignRule
         //        blockRule
-        member this.command = this.XBlockRule
+        member this.XBlockRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
+                                 + this.whitespace.oneOrMore.opt) +. (this.realSeqVarRule |- this.realSeqConstRule |- this.seqRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
 
-        member this.XBlockRule = //fuck
-                let blockRule = production "blockRule"
-                //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
-                let block = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (blockRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) //--> Block 
-                //let moreBlocks
-                blockRule.rule
-                    <-    //block .+ ~~"{" + block --> Block 
-                       //block --> fun a -> Block(a, Empty)
-                       block |- 
-                       this.realSeqVarRule
-                       //|- block +  blockRule --> Block 
-                       |- this.seqRule 
+        ///member this.XBlockRule = //fuck
+        //        let blockRule = production "blockRule"
+        //        //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
+        //        let block = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (blockRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) //--> Block 
+        //        blockRule.rule
+        //            <-
+        //               this.realSeqConstRule
+        //               |- this.seqRule
+        //               |- this.assignRule
+        //               |- block
                        //|- blockRule
                        //|- (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (this.realSeqVarRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)
-                blockRule
+        //        blockRule
 
         //member this.blockRule = 
 
         //de loop só tem o while na documentação da IMP:
-        member this.loopRule = (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +. this.boolOp + this.command --> Loop
-                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore) +  this.whitespace.oneOrMore + ~~"(" +  this.whitespace.oneOrMore +. this.boolOp .+ this.whitespace.oneOrMore .+ ~~")" .+  
-                               this.whitespace.oneOrMore  + this.command --> Loop
+        member this.loopRule =  (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) +. this.boolOp + this.XBlockRule--> Loop
+                               |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) + ~~"(" +  this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")"   
+                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule .+ ~~";" --> Loop
+                               
         
-        member this.generalRule =  //this.decRule + this.ifRule //--> Block
-                                   //|- this.decRule + this.loopRule //--> Block  
-                                   this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
+
+        member this.commaDot = this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt  + this.whitespace.oneOrMore.opt .+  ~~";" .+
+                                  this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt+ this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt
+
+        member this.validCommand = this.seqRule .+ this.commaDot + this.ifRule --> Seq //Seq bugado.
+                                  |- this.seqRule .+ this.commaDot + this.loopRule --> Seq
+                                  |- this.seqRule .+ this.commaDot + this.ifRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
+                                  |- this.seqRule
+
+        member this.generalRule =  this.decRule .+ this.commaDot +  this.ifRule --> Block
+                                   |- this.decRule + this.loopRule --> Block  
+                                   //this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
 
 
 

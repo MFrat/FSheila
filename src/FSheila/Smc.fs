@@ -31,42 +31,47 @@ type ESMC() =
 
     //seta o elemento na memória e retorna o location
     member private this.setOnMemory (c : Tipao) =
-        let location = Location(int -1)
+        let mutable location = Location(int -1)
         for i in 0 .. M.Keys.Count do
             let idx = Location(int i)
             match (M.ContainsKey(idx)) with
-            | true ->
-                let location = idx
+            | false ->
+                location <- idx
                 M.Add(location, c)
             | _ -> ()
         
         if location = Location(int -1) then
-            let location = Location(int M.Keys.Count)
+            location <- Location(int M.Keys.Count)
             M.Add(location, c)
-            location
-        else
-            location
+        
+        location
 
     member private this.garbageCollector =
-        let toRemove = []
         for entry in Dictionary<Tipao, Tipao>(M) do //faz uma cópia da memória para iterar
             match entry.Key with
             | Location l -> match E.ContainsValue(Location l) with
                 | false -> M.Remove(Location l) |> ignore
                 | _ -> ()
 
+    member private this.findIdValue (id : string) = 
+        match E.Item(id) with
+        | Location x -> M.Item(Location x)
+        | Number x -> Number x
+        | Boolean x -> Boolean x
+        | _ -> failwith "Id not found"
+    
     member this.enviroment (op : Tipao) = 
         match op with
-        | ConstBlock (x,y) -> S.Push(XEnviroment(this.newEnviroment)); match x,y with
+        | ConstBlock (x,y) -> S.Push(Enviroment(this.newEnviroment)); match x,y with
             | ConstInit (a,b), y ->
             match b with
-                | Id b -> E.Add(string(a), Id(b))
+                | Id b -> E.Add(string(a), this.findIdValue(b))
                 | Number b -> E.Add(string(a), Number(b))
                 | Boolean b -> E.Add(string(a), Boolean(b))
             ; C.Push(XConstBlock); C.Push(y)
         | XConstBlock -> match S.Pop() with
-            | XEnviroment x -> E <- x
-        | VarBlock (x,y) -> S.Push(XEnviroment(this.newEnviroment)); match x,y with
+            | Enviroment x -> E <- x
+        | VarBlock (x,y) -> S.Push(Enviroment(this.newEnviroment)); match x,y with
             | VarInit (a,b), y ->
             match b with
                 | Id b -> E.Add(string(a), this.setOnMemory(Id(b)))
@@ -74,7 +79,7 @@ type ESMC() =
                 | Boolean b -> E.Add(string(a), this.setOnMemory(Boolean(b)))
             ; C.Push(XVarBlock); C.Push(y)
         | XVarBlock -> match S.Pop() with //ALEM DISSO PRECISA LIMPAR A MEMORIA
-            | XEnviroment x -> E <- x; this.garbageCollector
+            | Enviroment x -> E <- x; this.garbageCollector
         | _ -> failwith "Deu ruim"
 
     member this.aKindOfMagic =

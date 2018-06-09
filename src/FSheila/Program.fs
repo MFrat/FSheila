@@ -13,44 +13,29 @@ let main argv =
     printIntro
     let testGrammar = new PEGParser()
     let eSMC = new ESMC()
+    //NOTA: por motivos técnicos, var seguido de const não funciona!
+
+    //let teste8 = parse testGrammar.ifRule "if (x > 0) { 
+    //                                      const alhao = 3, buceta = 4 * caral;
+    //                                      var porb = cao; 
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true ; grete := false;
+    //                                       } else { sheila := 4;
+    //                                                gretchen := true; }"
+                                                     
+    //let teste8 = parse testGrammar.loopRule "while ( xvideos <> 0 ) { 
+    //                                      const cara = 3, bta = 4 * cao;
+    //                                      var hub = carhao, asdasda = xml / cara; 
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true; grete := false; };"
+                                        
+    let teste8 = parse testGrammar.XBlockRule "{const cara = 3, bta = 4 * cao;
+                                          var hub = carhao, asdasda = xml / cara; 
+                                          xvideos := 4 + 4; 
+                                          gretchen := true; grete := false; }"
+      
     
-    let fat = parse testGrammar.generalRule "while ~(x == 0) {
-                                           y := y * x;
-                                           x := x - 1
-                                           }"
-    let fat2 = parse testGrammar.generalRule "while ~(x == 0) {
-                                                    y := y + 1;
-                                                    x := x - 1;
-                                                    sheila := false}"
-    let teste = parse testGrammar.realSeqVarRule "var x = sheila * xsheila"
-    let teste2 = parse testGrammar.realSeqConstRule "const x = aaaaaa" //, y , sjsj, lee"
-    let teste3 = parse testGrammar.realSeqVarRule "var x = 3 , xsxs = kkkk + 4, aaaaaa = 0, bbbbb = false, aa = x * 4"
-    //let teste4 = parse testGrammar.realSeqConstRule "const x = burger , xsxs = sheila / 4 , eeee = xhub"
-    //let teste5 = parse testGrammar.seqDecRule "const x = 4 , xsxs = sheila / 4 , eeee = true ;
-    //                                           var x = videos"
-    let teste6 = parse testGrammar.XBlockRule "{ y := y * x;
-                                                x := x - 1;
-                                                sheila := y > x and x > 0 }"
-
-    let teste7 = parse testGrammar.realSeqVarRule "var x = videos, y = sheila, zu = 4*gh"
-    let teste8 = parse testGrammar.decRule "var x = videos, y = sheila, zu = 4*gh;
-                                            const asdasd = 34"  //esse caso não é permitido por construção. Se um bloco é criado 
-                                                                //(por alguma declaração, necessariamente ele deve ter um ou mais comandos seguidos (ou uma declaração)
-    let teste8 = parse testGrammar.generalRule "var x = videos, y = sheila, zu = 4*gh;
-                                            const asdasd = 34;
-                                            xvideos := 4;
-                                            xsheila := xvideos * xvideos
-                                            while ~(x == 0) {
-                                                    y := y + 1;
-                                                    x := x - 1;
-                                                    sheila := false}
-                                            "
-
-    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; erick := erick + 2"
-    let testeErickNaoQuebrado = parse testGrammar.decRule "var erick = 1; const a = 1; erick := erick - 2"
-    let testeErickNaoQuebrado = parse testGrammar.decRule "const a = 1; var erick = 1; erick := erick - 2"
-
-    let testeErickQuebrado = parse testGrammar.decRule "var erick= 1; const a = 2; erick := a + erick"
+    let pqp = parse testGrammar.decRule "const a = 2, b= a; var c = 0; c := a + b;"
 
     //printfn "%A" teste8
     //let x r =
@@ -58,8 +43,8 @@ let main argv =
     //    | Success k -> printfn "Input = %A" k.value;
     //    | Failure x -> printfn "%A" x.index
     //x teste8
-    eSMC.fillEnviroment
-    getFromParser testeErickNaoQuebrado eSMC
+    //eSMC.fillEnviroment
+    getFromParser pqp eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
@@ -67,3 +52,5 @@ let main argv =
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     0
+
+    
