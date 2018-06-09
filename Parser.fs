@@ -242,29 +242,40 @@ type PEGParser () =
 
         //regra do assign
         member this.assignRule = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" 
-                                 + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt) --> Assign
+                                 + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt)  .+ ~~";" --> Assign
 
         member this.ifRule =
                //let command = this.assignRule
                //adicionado parentização no "if"
                ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + 
-                         this.assignRule.+ ~~"else" + this.assignRule --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+                         this.assignRule.+ ~~"else" + this.assignRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + this.XBlockRule .+ ~~"else" +
-                         this.assignRule  -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+                         this.assignRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) +
-                         this.assignRule .+ ~~"else" + this.XBlockRule --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+                         this.assignRule .+ ~~"else" + this.XBlockRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) 
-               + this.XBlockRule .+ ~~"else" + this.XBlockRule -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               + this.XBlockRule .+ ~~"else" + this.XBlockRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
         //regra de sequência (aparentemente 100%)
         //NOTA: na semântica de seq manter a ordem de execução de forma consistente (não sair empilhando descaradamente para depois resolver)
+        //member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
+        //       let command = this.assignRule 
+        //       let seqRule = production "seqRule"
+        //       let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (command) .+ this.whitespace.oneOrMore.opt) 
+        //                 + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+        //       seqRule.rule
+        //          <-  seq |- command
+        //       seqRule
+
         member this.seqRule = //(this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt) .+ ~~";" + (this.whitespace.oneOrMore.opt +. this.assignRule .+ this.whitespace.oneOrMore.opt).oneOrMore --> fun(a,b) -> Seq (a,b)
-               let command =  this.assignRule 
                let seqRule = production "seqRule"
-               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (command) .+ this.whitespace.oneOrMore.opt) .+ ~~";" 
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule ) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <-  seq |- command
+                  <-  seq |- this.assignRule
                seqRule
+
+        member this.realExecRule = this.realSeqVarRule |- this.realSeqConstRule |-  this.seqRule |- this.ifRule |- this.loopRule 
+
 
         //regra do bloco de comandos, parece estar 100%
         //member this.blockRule = 
@@ -298,7 +309,7 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule =  (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) +. this.boolOp + this.XBlockRule--> Loop
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) + ~~"(" +  this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")"   
-                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule --> Loop
+                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule .+ ~~";" --> Loop
                                
         
 

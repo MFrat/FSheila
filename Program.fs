@@ -15,25 +15,25 @@ let main argv =
     let eSMC = new ESMC()
     //NOTA: por motivos técnicos, var seguido de const não funciona!
 
-    let teste8 = parse testGrammar.ifRule "if (x > 0) { 
-                                          const alhao = 3, buceta = 4 * caral;
-                                          var porb = cao; 
-                                          xvideos := 4 + 4; 
-                                          gretchen := true ; grete := false
-                                           } else { sheila := 4;
-                                                    gretchen := true }"
+    //let teste8 = parse testGrammar.ifRule "if (x > 0) { 
+    //                                      const alhao = 3, buceta = 4 * caral;
+    //                                      var porb = cao; 
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true ; grete := false;
+    //                                       } else { sheila := 4;
+    //                                                gretchen := true; }"
                                                      
-    let teste8 = parse testGrammar.loopRule "while ( xvideos <> 0 ) { 
-                                          const cara = 3, bta = 4 * cao;
+    //let teste8 = parse testGrammar.loopRule "while ( xvideos <> 0 ) { 
+    //                                      const cara = 3, bta = 4 * cao;
+    //                                      var hub = carhao, asdasda = xml / cara; 
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true; grete := false; };"
+                                        
+    let teste8 = parse testGrammar.XBlockRule "{const cara = 3, bta = 4 * cao;
                                           var hub = carhao, asdasda = xml / cara; 
                                           xvideos := 4 + 4; 
-                                          gretchen := true ; grete := false }"
-
-
+                                          gretchen := true; grete := false; }"
       
-
-    //let teste8 = parse testGrammar.XBlockRule"{ garra:= 5;
-    //                                             xhub := sheila * garra }"
                   
     printfn "%A" teste8
     let x r =
