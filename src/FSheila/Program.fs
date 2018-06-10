@@ -35,16 +35,36 @@ let main argv =
                                           gretchen := true; grete := false; }"
       
     
-    let pqp = parse testGrammar.decRule "const a = 2, b= a; var c = 0; c := a + b;"
+    let pqp = parse testGrammar.decRule "const cara = 3, bta = 4 * cao;
+                                          var hub = carhao, asdasda = xml / cara; 
+                                          xvideos := 4;; 
+                                          if (x > 0) { 
+                                          xvideos := 4 + 4; 
+                                          gretchen := true ; grete := false;
+                                           } else { sheila := 4;
+                                                    gretchen := true; };"
+    let pqp = parse testGrammar.decRule "const cara = 3, bta = 4 * cao;
+                                          var hub = carhao, asdasda = xml / cara; 
+                                          xvideos := 4;; 
+                                          while (x > 0) { 
+                                            xvideos := 4 + 4; 
+                                            gretchen := true ; grete := false;
+                                          };"
+
+    let gordo = parse testGrammar.generalRule "var y = 10, x = 10; 
+                                           while ~(x == 0) { 
+                                             y := y * x; 
+                                             x := x - 1;
+                                           }"
 
     //printfn "%A" teste8
     //let x r =
     //    match r with 
     //    | Success k -> printfn "Input = %A" k.value;
     //    | Failure x -> printfn "%A" x.index
-    //x teste8
-    //eSMC.fillEnviroment
-    getFromParser pqp eSMC
+    //x gordo
+    eSMC.fillEnviroment
+    getFromParser gordo eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
