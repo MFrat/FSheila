@@ -29,13 +29,18 @@ let main argv =
     //                                      xvideos := 4 + 4; 
     //                                      gretchen := true; grete := false; };"
                                         
-    let teste8 = parse testGrammar.XBlockRule "{const cara = 3, bta = 4 * cao;
-                                          var hub = carhao, asdasda = xml / cara; 
-                                          xvideos := 4 + 4; 
-                                          gretchen := true; grete := false; }"
+    //let teste8 = parse testGrammar.XBlockRule "{const cara = 3, bta = 4 * cao;
+    //                                      var hub = carhao, asdasda = xml / cara; 
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true; grete := false; }"
       
     
-    let pqp = parse testGrammar.decRule "const a = 2, b= a; var c = 0; c := a + b;"
+    //let pqp = parse testGrammar.loopRule "while (xvideos <> 0) {
+    //                                      xvideos := 4 + 4; 
+    //                                      gretchen := true; }"
+
+    let pqp = parse testGrammar.XBlockRule "adada := 3;"
+
 
     //printfn "%A" teste8
     //let x r =
