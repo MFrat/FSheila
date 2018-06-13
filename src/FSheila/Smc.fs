@@ -28,7 +28,7 @@ type ESMC() =
     
     member private this.newEnviroment =
         new Dictionary<string, Tipao>(E)
-
+    
     //seta o elemento na memória e retorna o location
     member private this.setOnMemory (c : Tipao) =
         let mutable location = Location(int -1)
@@ -81,6 +81,14 @@ type ESMC() =
         | XVarBlock -> match S.Pop() with //ALEM DISSO PRECISA LIMPAR A MEMORIA
             | Enviroment x -> E <- x; this.garbageCollector
         | _ -> failwith "Deu ruim"
+    
+    member private this.checkVarType (id : Tipao) =
+        match id with
+        | Id x -> match E.Item(x) with
+            | Location x -> id
+            | _ -> printfn "(DummyUserError) You shall not assign a const"; failwith ""
+        | _ -> printfn "(DummyUserError) You shall declare yours variables"; failwith ""
+        
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -141,16 +149,16 @@ type ESMC() =
                         | Number x, Number y -> (S.Push(Boolean(y > x)))
             | XGeq -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Boolean(y >= x)))
-            | XAssign -> match S.Pop(), S.Pop() with
+            | XAssign -> match S.Pop(), this.checkVarType(S.Pop()) with 
                             | Number y, Id x -> try (M.Add(E.Item(string x),Number y))
                                                 with
                                                 | :? System.ArgumentException -> M.Remove(E.Item(string x)) ; M.Add(E.Item(string x),Number y)
                             | Boolean y, Id x -> try (M.Add(E.Item(string x),Boolean y))
-                                                 with
-                                                 | :? System.ArgumentException -> M.Remove(E.Item(string x))  ; M.Add(E.Item(string x),Boolean y)
+                                                    with
+                                                    | :? System.ArgumentException -> M.Remove(E.Item(string x))  ; M.Add(E.Item(string x),Boolean y)
                             | Id y, Id x      -> try (M.Add(E.Item(string y),M.Item(Id(x))))
-                                                 with
-                                                 | :? System.ArgumentException -> M.Remove(E.Item(string x))  ; (M.Add(E.Item(string y),E.Item(string x)))
+                                                    with
+                                                    | :? System.ArgumentException -> M.Remove(E.Item(string x))  ; (M.Add(E.Item(string y),E.Item(string x)))
             | XIf -> match S.Pop(), S.Pop(), S.Pop() with
                         | Boolean x, y, z -> match x with
                             | true -> C.Push(y)
