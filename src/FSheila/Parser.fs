@@ -177,9 +177,6 @@ type PEGParser () =
                seqVarRule.rule
                   <-  seq
                       |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validSeq --> VarBlock
-                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.seqRule --> VarBlock
-                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.realSeqConstRule--> VarBlock
-                      //|- this.varRule 
                seqVarRule
 
         member this.realSeqVarRule =  ~~"var" +. this.seqVarRule .+ this.linebreak.oneOrMore.opt
@@ -227,6 +224,7 @@ type PEGParser () =
         member this.assignRule = (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~":=" 
                                  + (this.whitespace.oneOrMore +. (this.calcOp |- this.boolOp) .+ this.whitespace.oneOrMore.opt) .+ ~~";" --> Assign
 
+
         member this.ifRule =
                //let command = this.assignRule
                //adicionado parentização no "if"
@@ -256,6 +254,7 @@ type PEGParser () =
                                  + this.whitespace.oneOrMore.opt) +. ( this.seqRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
                                  + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
 
+
         ///member this.XBlockRule = //fuck
         //        let blockRule = production "blockRule"
         //        //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
@@ -271,12 +270,12 @@ type PEGParser () =
         //        blockRule
 
         //member this.blockRule = 
+        
 
         //de loop só tem o while na documentação da IMP:
         member this.loopRule =  (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) +. this.boolOp + this.XBlockRule--> Loop
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) + ~~"(" +  this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")"   
-                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule .+ ~~";" --> Loop
-                               
+                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule .+ ~~";" --> Loop                               
         
 
         member this.commaDot = this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt  + this.whitespace.oneOrMore.opt .+  ~~";" .+
