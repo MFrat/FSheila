@@ -22,23 +22,15 @@ let main argv =
                                            }"
 
     let dj = parse testGrammar.generalRule "var dj = 4, sheila = false;
-                                            dj := dj * dj;;
+                                            dj := dj * dj;
                                             if (dj == 16) {
                                               sheila := true;
                                             } else {
                                               sheila := 4;
-                                            };"
-    //let test = parse testGrammar.generalRule "var x = 1, a = 2; a := 3; xvideos := 4;"
-
-
-    //printfn "%A" teste8
-    //let x r =
-    //    match r with 
-    //    | Success k -> printfn "Input = %A" k.value;
-    //    | Failure x -> printfn "%A" x.index
-    //x gordo
+                                            }"
+    
     //eSMC.fillEnviroment
-    getFromParser dj eSMC
+    getFromParser gordo eSMC
     eSMC.aKindOfMagic
     eSMC.print
 

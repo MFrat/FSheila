@@ -229,13 +229,13 @@ type PEGParser () =
                //let command = this.assignRule
                //adicionado parentização no "if"
                ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) +
-                         this.assignRule .+ ~~"else" + this.XBlockRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+                         this.assignRule .+ ~~"else" + this.XBlockRule --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
 
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) 
-               + this.XBlockRule .+ ~~"else" + this.XBlockRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+               + this.XBlockRule .+ ~~"else" + this.XBlockRule -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
 
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + 
-                         this.assignRule.+ ~~"else" + this.assignRule .+ ~~";" --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
+                         this.assignRule.+ ~~"else" + this.assignRule --> fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
                |- ~~"if" +. (this.whitespace.oneOrMore.opt +. ~~"(" +. this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ this.whitespace.oneOrMore.opt ) + this.XBlockRule .+ ~~"else" +
                          this.assignRule .+ ~~";" -->  fun a -> If (fst(fst(a)),snd(fst(a)),snd(a))
               
@@ -275,10 +275,10 @@ type PEGParser () =
         //de loop só tem o while na documentação da IMP:
         member this.loopRule =  (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) +. this.boolOp + this.XBlockRule--> Loop
                                |- (this.whitespace.oneOrMore.opt + ~~"while" + this.whitespace.oneOrMore.opt) + ~~"(" +  this.whitespace.oneOrMore.opt +. this.boolOp .+ this.whitespace.oneOrMore.opt .+ ~~")"   
-                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule .+ ~~";" --> Loop                               
+                               .+ this.whitespace.oneOrMore.opt  + this.XBlockRule --> Loop                               
         
 
-        member this.commaDot = this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt  + this.whitespace.oneOrMore.opt .+  ~~";" .+
+        member this.commaDot = this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt  + this.whitespace.oneOrMore.opt .+  //~~";" .+
                                   this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt+ this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt
 
         member this.validSeq =    this.loopRule
