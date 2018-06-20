@@ -11,14 +11,32 @@ open Smc
 [<EntryPoint>]
 let main argv = 
     printIntro
-    M.Add("y", Number(1))
-    M.Add("x", Number(5))
     let testGrammar = new PEGParser()
-    let fat = parse testGrammar.generalRule "while ~(x == 0) {y := y * x;x := x - 1}"
-    getFromParser fat
-    aKindOfMagic S M C
-    printSMC S M C
+    let eSMC = new ESMC()
+                                        
+
+    let gordo = parse testGrammar.generalRule "var y = 10, x = 10;
+                                           while ~(x == 0) {
+                                             y := y * x; 
+                                             x := x - 1;
+                                           }"
+
+    let dj = parse testGrammar.generalRule "var dj = 4, sheila = false;
+                                            dj := dj * dj;
+                                            if (dj == 16) {
+                                              sheila := true;
+                                            } else {
+                                              sheila := 4;
+                                            }"
+    
+    //eSMC.fillEnviroment
+    getFromParser gordo eSMC
+    eSMC.aKindOfMagic
+    eSMC.print
+
     
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     0
+
+    
