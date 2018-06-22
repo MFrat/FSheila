@@ -55,7 +55,6 @@ type Tipao =
          | Block of Tipao * Tipao //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
          | VarBlock of Tipao * Tipao //bloco declarado por declaração de var
          | ConstBlock of Tipao * Tipao //bloco declarado por declaração de const.
-         | Empty
          //Declarations' orders
          | XVar //Talvez precisemos de dois tipos distintos para var e const por possuírem uma semântica diferente.
          | XConst
@@ -66,6 +65,11 @@ type Tipao =
          | XBlock
          //| Empty //usado p/ quanado há somente um bloco (no longer needed)
          | Enviroment of Dictionary<string, Tipao> //para desempilhar
+         // (novos tipos para a p3)
+         | Formals of Tipao //seria uma lista de parâmetros? Formals são os parâmetros formais da declaração do proc.
+         | Prc of Tipao * Tipao * Tipao //Id, formals e Block
+         | Empty  //Problema: do jeito que tá definido a declaração de formals na formalsRule, não pode ser vazio. Prc necessariamente precisa de algo ali no meio pra marcar que tem ou não parâmetro. Isso pode
+                  // corrigido usando uma lista de variaveis a serem declaradas.
          
 
 type PEGParser () = 
@@ -293,7 +297,27 @@ type PEGParser () =
         member this.generalRule =  this.decRule |- this.validSeq
                                    //this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
 
+        //Bloco geral pra corpo de procedimento:
+        member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
+                                 + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
 
 
 
+        //p3
+        //Declaração de parâmetros é vista como declaração de blocos
+        member this.singleFormalRule = this.id --> fun a -> Formals(Id a)
+
+        member this.formalsRule = 
+               let formalsRule = production "formalsRule"
+               let formals = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.singleFormalRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
+                             + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. formalsRule .+ this.whitespace.oneOrMore.opt) --> Seq //Sequência de formals, mas essa Seq é a mesma de comando.
+               formalsRule.rule
+                  <-  formals 
+                      |- this.singleFormalRule
+               formalsRule
+
+        //this.formalsRule é a regra que permmite o parsing dos parâmetros formais de uma função.
+        member this.procRule = ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkRule --> fun a -> Prc (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
+                               |- ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkRule --> fun a ->  Prc( Id (fst(fst(a))), Empty, snd(a))
 

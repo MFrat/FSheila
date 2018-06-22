@@ -15,24 +15,34 @@ let main argv =
     let eSMC = new ESMC()
                                         
 
-    let gordo = parse testGrammar.generalRule "var y = 10, x = 10;
+    let gordo = parse testGrammar.generalRule "var y = 5, x = 4;
                                            while ~(x == 0) {
                                              y := y * x; 
                                              x := x - 1;
                                            }"
 
-    let dj = parse testGrammar.generalRule "var dj = 4, sheila = false;
+    let dj = parse testGrammar.generalRule "var dj = 4, sheila = false, asd = 1;
                                             dj := dj * dj;
                                             if (dj == 16) {
                                               sheila := true;
                                             } else {
-                                              sheila := 4;
+                                              asd := 4;
                                             }"
     
+    //let vaiDarRuim = parse testGrammar.generalRule "const a = 1; a := 2;"
+
+    let testProc = parse testGrammar.procRule "proc fact(x) {
+                                                       var y = 5, x = 4;
+                                                       while ~(x == 0) {
+                                                         y := y * x; 
+                                                         x := x - 1; 
+                                                       } 
+                                                   }"
+
     //eSMC.fillEnviroment
-    getFromParser gordo eSMC
-    eSMC.aKindOfMagic
-    eSMC.print
+    getFromParser testProc eSMC
+    //eSMC.aKindOfMagic
+    //eSMC.print
 
     
     let sheila = Console.ReadLine()
