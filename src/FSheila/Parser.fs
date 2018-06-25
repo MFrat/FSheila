@@ -46,13 +46,9 @@ type Tipao =
          | Assign of string * Tipao
          | XAssign
          //Declarations
-         //| DclConsts of Tipao
-         //| DclVars of Tipao //seqûência de vars na mesma linha.
          | ConstInit of string * Tipao
          | VarInit of string * Tipao
-         | Init of string * Tipao
          | SeqDec of Tipao * Tipao //sequência de declarações. Uma regra que tem um var seguido de const, ex. Pra isso, uma regra correspondente tem que ser criada no parser
-         | Block of Tipao * Tipao //um block segura um Bloco de comandos seguido de um outro bloco de comandos, ou seja: sequência de comandoss eguindo de um if ou um while ou dois while. É como uma sequência de blocos.
          | VarBlock of Tipao * Tipao //bloco declarado por declaração de var
          | ConstBlock of Tipao * Tipao //bloco declarado por declaração de const.
          //Declarations' orders
@@ -68,8 +64,14 @@ type Tipao =
          // (novos tipos para a p3)
          | Formals of Tipao //seria uma lista de parâmetros? Formals são os parâmetros formais da declaração do proc.
          | Prc of Tipao * Tipao * Tipao //Id, formals e Block
-         | Empty  //Problema: do jeito que tá definido a declaração de formals na formalsRule, não pode ser vazio. Prc necessariamente precisa de algo ali no meio pra marcar que tem ou não parâmetro. Isso pode
-                  // corrigido usando uma lista de variaveis a serem declaradas.
+         | Empty  //Problema: do jeito que tá definido a declaração de formals na formalsRule, não pode ser vazio. Prc necessariamente precisa de algo ali no meio que representam os parâmetros. Isso pode
+                  //ser corrigido usando uma lista de variaveis a serem declaradas.
+         | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
+         | ConstDec of string //declaração de constantes a nível de código (mesma ressalva acima).
+         | Init of Tipao * Tipao
+         | Module of string * Tipao
+         | Block of Tipao * Tipao //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
+
          
 
 type PEGParser () = 
@@ -83,7 +85,7 @@ type PEGParser () =
                                 |- this.whitespace.oneOrMore.opt +. ~~"-" +. this.posNumber .+ this.whitespace.oneOrMore.opt--> fun a -> -a
 
         member this.digit = oneOf "0123456789"
-        member this.lLetter = oneOf "abcdefghijklmnopqrstuvwxyz" --> fun a -> a
+        member this.lLetter = oneOf "_-abcdefghijklmnopqrstuvwxyz" --> fun a -> a
         member this.uLetter = oneOf "ABCDEFGHIJKLMNOPQRSTUVWXYZ" --> fun a -> a
         member this.boolTrue = ~~"true" --> fun(a) -> true
         member this.boolFalse = ~~"false" --> fun(a) -> false
@@ -209,19 +211,19 @@ type PEGParser () =
         member this.decRule = this.realSeqVarRule |- this.realSeqConstRule
 
 
-        member this.initRule = 
-             let boole = this.boolOp //--> Boolexp
-             let numExp = this.calcOp //|- boole
-             let initRule = production "initRule"
-             let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
-             let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
-             //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-             let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
-             let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
-             initRule.rule //tem que ver isso aqui
-                //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-                <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
-             initRule
+        //member this.initRule = 
+        //     let boole = this.boolOp //--> Boolexp
+        //     let numExp = this.calcOp //|- boole
+        //     let initRule = production "initRule"
+        //     let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
+        //     let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+        //     //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
+        //     let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
+        //     let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
+        //     initRule.rule //tem que ver isso aqui
+        //        //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
+        //        <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
+        //     initRule
          
 
         //regra do assign
@@ -320,4 +322,59 @@ type PEGParser () =
         //this.formalsRule é a regra que permmite o parsing dos parâmetros formais de uma função.
         member this.procRule = ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkRule --> fun a -> Prc (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
                                |- ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkRule --> fun a ->  Prc( Id (fst(fst(a))), Empty, snd(a))
+
+        member this.moreProcsRule = 
+               let moreProcsRule = production "moreProcsRule"
+               let moreProcs = this.procRule .+ this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt +. moreProcsRule
+               moreProcsRule.rule
+                    <- moreProcs
+                    |- this.procRule
+               moreProcsRule
+
+        //regras de declaração de variáveis e constantes a nível de módulos
+        //regra para inicialização de variável/constante:
+        //TODO init espera um string ou um Tipao (id)? Eu acho que é um Id, pois a semântica dele é procurar uma variável já declarada para amarrar um valor a ela
+        //------------ Bugado
+        //seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.varRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
+        //                 + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
+        member this.eq = this.whitespace.oneOrMore.opt + ~~"=" +. this.whitespace.oneOrMore.opt
+        member this.idToId = (this.id --> Id)
+        member this.init = ~~"init" + this.whitespace.oneOrMore.opt +. this.idToId +  this.eq + (this.calcOp |- this.boolOp) --> fun a -> Init(fst(fst(a)),snd(a))
+
+        member this.initRule = 
+               let initRule = production "initRule"
+               let manyInits = this.init 
+                               .+ this.whitespace.oneOrMore.opt + ~~"," +. initRule 
+               initRule.rule
+                   <- manyInits
+                   |- this.init
+               initRule
+        //regra de declaração de módulos
+        member this.constDecModuleRule = 
+               let constDecModuleRule = production "constDecModuleRule"
+               let moreDecs = ~~"const" + this.whitespace.oneOrMore.opt +. this.id + ~~"," + constDecModuleRule --> fun a -> Seq( ConstDec(fst(fst(a))), ConstDec(snd(fst(a))))
+               constDecModuleRule.rule
+                   <-  moreDecs
+                    |-  ~~"const" + this.whitespace.oneOrMore.opt +. this.id --> fun a -> ConstDec(a)
+               constDecModuleRule
+        //--------------------------------------
+        member this.varDecModuleRule = 
+               let varDecModuleRule = production "varDecModuleRule"
+               let moreDecs = ~~"var" + this.whitespace.oneOrMore.opt +. this.id + ~~"," + varDecModuleRule --> fun a -> Seq( VarDec(fst(fst(a))), VarDec(snd(fst(a))))
+               varDecModuleRule.rule
+                   <-  moreDecs
+                    |-  ~~"var" + this.whitespace.oneOrMore.opt +. this.id --> fun a -> VarDec(a)
+                    |-  this.constDecModuleRule
+               varDecModuleRule
+
+        
+        member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.procRule) --> Seq 
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) 
+
+        member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id + this.moduleBlkRule .+ ~~"end" --> Module
+
+        
+        
+
 

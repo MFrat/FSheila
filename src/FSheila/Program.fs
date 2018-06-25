@@ -38,9 +38,30 @@ let main argv =
                                                          x := x - 1; 
                                                        } 
                                                    }"
+    let testProc = parse testGrammar.procRule "proc teste(x,y) {
+                                                    var x = 4;
+                                                    x := x + 1;
+                                                }"
+    let testModule = parse testGrammar.moduleRule "module Fact-Rec var y proc fact(x) { if ~(x == 0) {
+		                                                 y := y * x ;
+		                                                 x := 1;
+                                                       }
+                                                       }
+                                                       end"//problema tá depois do if, no meio da condbool.
+    let testModule2 = parse testGrammar.moduleRule "module Fact-Rec
+                                                    var y
+                                                    init y = 4
+                                                    proc fact(x) {
+                                                    var y = 5, x = 4;
+                                                      while ~(x == 0) {
+                                                          y := y * x; 
+                                                          x := x - 1; 
+                                                        } 
+                                                    }
+                                                    end"
 
     //eSMC.fillEnviroment
-    getFromParser testProc eSMC
+    getFromParser testModule2 eSMC
     //eSMC.aKindOfMagic
     //eSMC.print
 
