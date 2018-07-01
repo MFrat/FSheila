@@ -23,8 +23,8 @@ type Tipao =
          | Geb of Tipao * Tipao
          | Geq of Tipao * Tipao
          | Neq of Tipao * Tipao
-         | If of Tipao * Tipao * Tipao //boolTipao vira Tipao
-         | Loop of Tipao * Tipao // Tipao list (ou não -->) //um bloco é visto pelo ScanRat como uma lista de comandos.
+         | If of Tipao * Tipao * Tipao 
+         | Loop of Tipao * Tipao
          | Seq of Tipao * Tipao
          //Commands' orders
          | XAdd
@@ -59,18 +59,22 @@ type Tipao =
          | XVarBlock
          | XConstBlock
          | XBlock
-         //| Empty //usado p/ quanado há somente um bloco (no longer needed)
          | Enviroment of Dictionary<string, Tipao> //para desempilhar
          // (novos tipos para a p3)
-         | Formals of Tipao //seria uma lista de parâmetros? Formals são os parâmetros formais da declaração do proc.
+         | Formals of Tipao //Formals são os parâmetros formais da declaração do proc e de fun.
+         | Actuals of Tipao //Actuals são os parâmetros passados efetivamente para procs e funs.
          | Prc of Tipao * Tipao * Tipao //Id, formals e Block
-         | Empty  //Problema: do jeito que tá definido a declaração de formals na formalsRule, não pode ser vazio. Prc necessariamente precisa de algo ali no meio que representam os parâmetros. Isso pode
-                  //ser corrigido usando uma lista de variaveis a serem declaradas.
+         | Prcf of Tipao * Tipao //procedimentos sem parâmetros (Id e Block).
          | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
          | ConstDec of string //declaração de constantes a nível de código (mesma ressalva acima).
          | Init of Tipao * Tipao
-         | Module of string * Tipao
-         | Block of Tipao * Tipao //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
+         | Module of string * Tipao //talvez saia
+         | Blk of Tipao * Tipao //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
+         | Fun of Tipao * Tipao * Tipao //Tipos p/ funções que retornam valores
+         | Funf of Tipao * Tipao //função sem parâmetros
+         | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
+         | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
+         | Ret of Tipao //Ret indica o valor a ser retornado de uma procedure
 
          
 
@@ -98,10 +102,13 @@ type PEGParser () =
         //correção no id: antes permitia apenas um número ser um identificador.
         member this.id = (this.letter + (this.letter |- this.digit).oneOrMore) --> fun (a,l) -> a::l |> System.String.Concat
                          |- this.letter --> fun a -> (string) a
+        
+        member this.value =  this.number --> Number
+                            |- this.whitespace.oneOrMore.opt +. this.booleanType  .+ this.whitespace.oneOrMore.opt --> Boolean
+                            |- this.id --> Id
 
         //operators:
         //regras de parsing de operações numéricas
-        //BUGADO: parser não permite id * id sabe o diabo porque
         member this.calcOp = 
                 let multiplicative = production "multiplicative"
                 let additive = production "additive"
@@ -248,11 +255,20 @@ type PEGParser () =
         //regra de sequência 
         member this.seqRule =
                let seqRule = production "seqRule"
-               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule ) .+ this.whitespace.oneOrMore.opt) 
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.callRule) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <-  seq |- this.assignRule
+                  <-  seq |- this.assignRule |- this.callRule
                seqRule
+
+        member this.seqFunRule =
+               let seqFunRule = production "seqFunRule"
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.callRule |- this.retRule) .+ this.whitespace.oneOrMore.opt) 
+                         + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqFunRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+               seqFunRule.rule
+                  <-  seq |- this.assignRule |- this.callRule |- this.retRule //retRule é a regra de retorno.
+               seqFunRule
+
 
 
   
@@ -260,22 +276,7 @@ type PEGParser () =
                                  + this.whitespace.oneOrMore.opt) +. ( this.seqRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
                                  + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
 
-
-        ///member this.XBlockRule = //fuck
-        //        let blockRule = production "blockRule"
-        //        //let simpleCommand =  (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)  +. (this.assignRule |- this.seqRule) .+ (this.whitespace.oneOrMore.opt |- this.linebreak.oneOrMore.opt)
-        //        let block = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (blockRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) //--> Block 
-        //        blockRule.rule
-        //            <-
-        //               this.realSeqConstRule
-        //               |- this.seqRule
-        //               |- this.assignRule
-        //               |- block
-                       //|- blockRule
-                       //|- (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) +. (this.realSeqVarRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)
-        //        blockRule
-
-        //member this.blockRule = 
+ 
         
 
         //de loop só tem o while na documentação da IMP:
@@ -297,13 +298,19 @@ type PEGParser () =
                                   |- this.seqRule
                                   //validSeq são sequências "validas". isso acima aparentemente funciona
         member this.generalRule =  this.decRule |- this.validSeq
-                                   //this.assignRule |- this.loopRule |- this.seqRule |- this.ifRule //|- this.calcOp |- this.boolOp
 
         //Bloco geral pra corpo de procedimento:
         member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
                                  + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
                                  + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
 
+
+        member this.blkFunRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
+                                 + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
+       
+
+        
 
 
         //p3
@@ -321,7 +328,7 @@ type PEGParser () =
 
         //this.formalsRule é a regra que permmite o parsing dos parâmetros formais de uma função.
         member this.procRule = ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkRule --> fun a -> Prc (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
-                               |- ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkRule --> fun a ->  Prc( Id (fst(fst(a))), Empty, snd(a))
+                               |- ~~"proc" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkRule --> fun a ->  Prcf( Id (fst(fst(a))), snd(a))
 
         member this.moreProcsRule = 
                let moreProcsRule = production "moreProcsRule"
@@ -367,12 +374,48 @@ type PEGParser () =
                     |-  this.constDecModuleRule
                varDecModuleRule
 
+
+        //Regras para o parsing de funções que retornam valores
+        member this.retRule = ~~"return" +. this.value --> Ret //parei fazendo parser ret TODO
+
+        member this.funRule = ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkFunRule  --> fun a -> Fun (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
+                               |- ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkFunRule --> fun a ->  Funf( Id (fst(fst(a))), snd(a))
+
+        member this.moreFunsRule = 
+               let moreFunsRule = production "moreFunsRule"
+               let moreFuns = this.procRule .+ this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt +. moreFunsRule
+               moreFunsRule.rule
+                    <- moreFuns
+                    |- this.funRule
+               moreFunsRule
+
         
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.procRule) --> Seq 
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.procRule |- this.funRule) --> Blk
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) 
 
         member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id + this.moduleBlkRule .+ ~~"end" --> Module
+        //mudar retorno de Module cf. foto retirada hoje (27/06/2018) em sala de aula. Reolhar a especificação da BPLC. Module não serve para nada na real, o nome dele inclusive é descartado.
+
+
+        //regra para parsing de chamadas de funções/procedimentos
+        //Actuals são parâmetros efetivamente passados para a função. Eles tem que bater *exatamente* com os parâmetros formais declarados no procedimento/função.
+        member this.singleActualsRule = this.id --> fun a -> Actuals(Id a)
+
+        member this.actualsRule =
+               let actualsRule = production "actualsRule"
+               let actuals = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.singleActualsRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
+                             + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. actualsRule .+ this.whitespace.oneOrMore.opt) --> Seq //Sequência de formals, mas essa Seq é a mesma de comando.
+               actualsRule.rule
+                  <-  actuals 
+                  |- this.singleActualsRule
+               actualsRule
+
+        member this.callRule = this.id .+ ~~"(" + this.actualsRule .+ ~~")" .+ ~~";"--> fun a -> Cal (Id (fst(a)), snd(a))
+                               |- this.id .+ ~~"(" + ~~")" .+ ~~";" --> fun a -> Calf (Id(fst(a)))
+
+
+
 
         
         
