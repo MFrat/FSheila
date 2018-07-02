@@ -176,4 +176,4 @@ let stackator (impBplc : Tipao) (eSMC : ESMC) =
 let getFromParser (program) (eSMC : ESMC) =
     match program with
     | Success r -> printfn "Input = %A" r.value; stackator r.value eSMC
-    | Failure f -> printfn "%A" f.index //failwith "Parsing falhou!"
+    | Failure f -> printfn "Parsing falhou! %A" f.index //failwith "Parsing falhou!"
