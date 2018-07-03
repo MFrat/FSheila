@@ -65,7 +65,8 @@ let main argv =
                                                     proc fact(x) {
                                                     var y = 5, x = 4;
                                                       while ~(x == 0) {
-                                                          y := y * x; 
+                                                          y := y * x;
+                                                          print(y);
                                                           fact(x);            
                                                         } 
                                                     }

@@ -61,6 +61,7 @@ type Tipao =
          | XBlock
          | Enviroment of Dictionary<string, Tipao> //para desempilhar
          // (novos tipos para a p3)
+         | Print of Tipao
          | Formals of Tipao //Formals são os parâmetros formais da declaração do proc e de fun.
          | Actuals of Tipao //Actuals são os parâmetros passados efetivamente para procs e funs.
          | Prc of Tipao * Tipao * Tipao //Id, formals e Block
@@ -255,18 +256,18 @@ type PEGParser () =
         //regra de sequência 
         member this.seqRule =
                let seqRule = production "seqRule"
-               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.callRule) .+ this.whitespace.oneOrMore.opt) 
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.printRule |- this.callRule) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <-  seq |- this.assignRule |- this.callRule
+                  <-  seq |- this.assignRule |- this.printRule |- this.callRule 
                seqRule
 
         member this.seqFunRule =
                let seqFunRule = production "seqFunRule"
-               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.callRule |- this.retRule) .+ this.whitespace.oneOrMore.opt) 
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.printRule |- this.callRule |- this.retRule) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqFunRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqFunRule.rule
-                  <-  seq |- this.assignRule |- this.callRule //|- this.retRule //retRule é a regra de retorno.
+                  <-  seq |- this.assignRule |- this.printRule |- this.callRule //|- this.retRule //retRule é a regra de retorno.
                seqFunRule
 
 
@@ -402,10 +403,9 @@ type PEGParser () =
                     |- this.funRule
                     |- this.procRule
                moreFunsRule
-        //member this.procFunRule = this.moreProcsRule |- this.procRule |- this.moreFunsRule |- this.funRule
        
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreFunsRule2) --> Blk
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) --> Blk
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) 
 
         member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> fun a -> Blk(snd(a))//Blk (Id (fst(a)), snd(a))
@@ -427,6 +427,12 @@ type PEGParser () =
 
         member this.callRule = this.id .+ ~~"(" + this.actualsRule .+ ~~")" .+ ~~";"--> fun a -> Cal (Id (fst(a)), snd(a))
                                |- this.id .+ ~~"(" + ~~")" .+ ~~";" --> fun a -> Calf (Id(fst(a)))
+
+        //Regra do print
+        member this.printRule = ~~"print" + this.whitespace.oneOrMore.opt + ~~"(" +. this.value .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ ~~";" --> Print
+
+        //Declaração de módulos e execução de função à posteriori
+        member this.execRule = this.moduleRule +
 
 
 
