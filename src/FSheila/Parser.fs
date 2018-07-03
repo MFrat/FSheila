@@ -266,7 +266,7 @@ type PEGParser () =
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.callRule |- this.retRule) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqFunRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqFunRule.rule
-                  <-  seq |- this.assignRule |- this.callRule |- this.retRule //retRule é a regra de retorno.
+                  <-  seq |- this.assignRule |- this.callRule //|- this.retRule //retRule é a regra de retorno.
                seqFunRule
 
 
@@ -299,6 +299,8 @@ type PEGParser () =
                                   //validSeq são sequências "validas". isso acima aparentemente funciona
         member this.generalRule =  this.decRule |- this.validSeq
 
+        member this.generalFunRule = (this.decRule |- this.validSeq) + this.retRule --> Seq //corpo de uma função necessita ser encerrado por um "return statement".
+
         //Bloco geral pra corpo de procedimento:
         member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
                                  + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
@@ -306,7 +308,7 @@ type PEGParser () =
 
 
         member this.blkFunRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
-                                 + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
+                                 + this.whitespace.oneOrMore.opt) +. (this.generalFunRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
                                  + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
        
 
@@ -332,7 +334,7 @@ type PEGParser () =
 
         member this.moreProcsRule = 
                let moreProcsRule = production "moreProcsRule"
-               let moreProcs = this.procRule .+ this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt +. moreProcsRule
+               let moreProcs = this.procRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreProcsRule --> fun a -> Seq(fst(fst(a)),snd(a))
                moreProcsRule.rule
                     <- moreProcs
                     |- this.procRule
@@ -341,7 +343,7 @@ type PEGParser () =
         //regras de declaração de variáveis e constantes a nível de módulos
         //regra para inicialização de variável/constante:
         //TODO init espera um string ou um Tipao (id)? Eu acho que é um Id, pois a semântica dele é procurar uma variável já declarada para amarrar um valor a ela
-        //------------ Bugado
+        //------------ estranho
         //seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.varRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
         //                 + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
         member this.eq = this.whitespace.oneOrMore.opt + ~~"=" +. this.whitespace.oneOrMore.opt
@@ -383,19 +385,31 @@ type PEGParser () =
 
         member this.moreFunsRule = 
                let moreFunsRule = production "moreFunsRule"
-               let moreFuns = this.procRule .+ this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt +. moreFunsRule
+               let moreFuns = this.funRule .+ this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt +. moreFunsRule
                moreFunsRule.rule
                     <- moreFuns
                     |- this.funRule
                moreFunsRule
 
-        
+
+        member this.moreFunsRule2 = 
+               let moreFunsRule = production "moreFunsRule"
+               let moreProcs = this.procRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreFunsRule --> fun a -> Seq(fst(fst(a)),snd(a))
+               let moreFuns = this.procRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreFunsRule --> fun a -> Seq(fst(fst(a)),snd(a))
+               moreFunsRule.rule
+                    <- moreFuns
+                    |- moreProcs
+                    |- this.funRule
+                    |- this.procRule
+               moreFunsRule
+        //member this.procFunRule = this.moreProcsRule |- this.procRule |- this.moreFunsRule |- this.funRule
+       
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.procRule |- this.funRule) --> Blk
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreFunsRule2) --> Blk
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) 
 
-        member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id + this.moduleBlkRule .+ ~~"end" --> Module
-        //mudar retorno de Module cf. foto retirada hoje (27/06/2018) em sala de aula. Reolhar a especificação da BPLC. Module não serve para nada na real, o nome dele inclusive é descartado.
+        member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> fun a -> Blk(snd(a))//Blk (Id (fst(a)), snd(a))
+        //mudar retorno de Module cf. foto retirada hoje (27/06/2018) em sala de aula. Reolhar a especificação da BPLC. Module não serve para nada na real, o nome dele inclusive é descartado. DONE
 
 
         //regra para parsing de chamadas de funções/procedimentos

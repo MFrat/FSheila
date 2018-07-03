@@ -69,6 +69,13 @@ let main argv =
                                                           fact(x);            
                                                         } 
                                                     }
+                                                    proc pornhub(x) {
+                                                    var y = 5, x = 4;
+                                                      while ~(x == 0) {
+                                                          y := y * x; 
+                                                          x := x - 1; 
+                                                        }
+                                                    }
                                                     end"
     
 
