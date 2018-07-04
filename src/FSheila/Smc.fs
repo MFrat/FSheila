@@ -88,7 +88,12 @@ type ESMC() =
             | Location x -> id
             | _ -> printfn "(DummyUserError) You shall not assign a const"; failwith ""
         | _ -> printfn "(DummyUserError) You shall declare yours variables"; failwith ""
-        
+   
+    member private this.addProc (id : Tipao) (abs : Tipao) = 
+        match id with
+        | Id x -> match abs with
+            | Abs (y,z) -> E.Add(string x, Abs(y,z))
+            | Absf (z) -> E.Add(string x, Absf(z))
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -120,6 +125,13 @@ type ESMC() =
             | If (x,y,z) -> S.Push(z); S.Push(y); C.Push(XIf); C.Push(x)
             | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(XLoop); C.Push(x)
             | Seq (x,y) -> C.Push(y); C.Push(x)
+            //New shit :: já estou de saco cheio dessa matéria :: maude nao é linguagem de gente ass Vítor (e Erick tbm)
+            | Module (x,y) -> C.Push(y); C.Push(x)
+            | Prc (x,y,z) -> this.addProc x (Abs(y,z))
+            | Prcf (x,z) -> this.addProc x (Absf(z))
+            | VarDec x -> ()
+            | ConstDec x -> ()
+            | Init (x,y) -> ()
             //Actions
             | XAdd -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Number(x + y)))
@@ -176,4 +188,4 @@ let stackator (impBplc : Tipao) (eSMC : ESMC) =
 let getFromParser (program) (eSMC : ESMC) =
     match program with
     | Success r -> printfn "Input = %A" r.value; stackator r.value eSMC
-    | Failure f -> printfn "%A" f.index //failwith "Parsing falhou!"
+    | Failure f -> printfn "Parsing falhou! %A" f.index //failwith "Parsing falhou!"

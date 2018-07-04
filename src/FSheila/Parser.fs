@@ -76,7 +76,9 @@ type Tipao =
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
          | Ret of Tipao //Ret indica o valor a ser retornado de uma procedure
-
+         //minhas bosta ai
+         | Abs of Tipao * Tipao //formals and block
+         | Absf of Tipao //block
          
 
 type PEGParser () = 
@@ -430,14 +432,3 @@ type PEGParser () =
 
         //Regra do print
         member this.printRule = ~~"print" + this.whitespace.oneOrMore.opt + ~~"(" +. this.value .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ ~~";" --> Print
-
-        //Declaração de módulos e execução de função à posteriori
-        member this.execRule = this.moduleRule +
-
-
-
-
-        
-        
-
-

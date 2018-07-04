@@ -81,9 +81,9 @@ let main argv =
     
 
     //eSMC.fillEnviroment
-    getFromParser testModule3 eSMC
-    //eSMC.aKindOfMagic
-    //eSMC.print
+    getFromParser testModule2 eSMC
+    eSMC.aKindOfMagic
+    eSMC.print
 
     
     let sheila = Console.ReadLine()
