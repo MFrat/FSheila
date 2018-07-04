@@ -48,7 +48,7 @@ let main argv =
                                                        }
                                                        }
                                                        end"
-    let testModule2 = parse testGrammar.moduleRule "module Fact-Rec
+    let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
                                                     var y
                                                     init y = 4
                                                     proc fact(x) {
@@ -58,7 +58,7 @@ let main argv =
                                                           x := x - 1; 
                                                         } 
                                                     }
-                                                    end"
+                                                    end  fact(4);"
     let testModule3 = parse testGrammar.moduleRule "module Fact-Rec
                                                     var y
                                                     init y = 4
@@ -79,6 +79,8 @@ let main argv =
                                                     }
                                                     end"
     
+
+    //let testModule2 = parse testGrammar.callRule "fact(4);"
 
     //eSMC.fillEnviroment
     getFromParser testModule2 eSMC

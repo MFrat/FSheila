@@ -76,9 +76,11 @@ type Tipao =
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
          | Ret of Tipao //Ret indica o valor a ser retornado de uma procedure
+         | Sheila of Tipao * Tipao
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
+
 
          
 
@@ -411,28 +413,38 @@ type PEGParser () =
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) 
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) --> Module
 
-        member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> fun a -> Blk(snd(a))//Blk (Id (fst(a)), snd(a))
-        //mudar retorno de Module cf. foto retirada hoje (27/06/2018) em sala de aula. Reolhar a especificação da BPLC. Module não serve para nada na real, o nome dele inclusive é descartado. DONE
+        member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> Exec
 
+        //Regra de parsing para várias chamadas após a declaração do módulo
+        member this.execCallRule = 
+               let execCallRule = production "execCallRule"
+               let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.callRule) .+ this.whitespace.oneOrMore.opt) 
+                         + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (execCallRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
+               execCallRule.rule
+                  <-  seq |- this.callRule 
+               execCallRule
+        
+        member this.sheilaRule = this.moduleRule + this.execCallRule --> Sheila
 
         //regra para parsing de chamadas de funções/procedimentos
         //Actuals são parâmetros efetivamente passados para a função. Eles tem que bater *exatamente* com os parâmetros formais declarados no procedimento/função.
-        member this.singleActualsRule = this.id --> fun a -> Actuals(Id a)
+        member this.singleActualsRule = this.value --> fun a -> Actuals(a)
 
         member this.actualsRule =
                let actualsRule = production "actualsRule"
                let actuals = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.singleActualsRule .+ this.whitespace.oneOrMore.opt) .+ ~~"," 
-                             + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. actualsRule .+ this.whitespace.oneOrMore.opt) --> Seq //Sequência de formals, mas essa Seq é a mesma de comando.
+                             + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. actualsRule .+ this.whitespace.oneOrMore.opt) --> Seq 
                actualsRule.rule
                   <-  actuals 
                   |- this.singleActualsRule
                actualsRule
 
-        member this.callRule = this.id .+ ~~"(" + this.actualsRule .+ ~~")" .+ ~~";"--> fun a -> Cal (Id (fst(a)), snd(a))
-                               |- this.id .+ ~~"(" + ~~")" .+ ~~";" --> fun a -> Calf (Id(fst(a)))
+        member this.callRule = (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.id .+ ~~"(" + this.actualsRule .+ ~~")" .+ ~~";"
+                               --> fun a -> Cal (Id (fst(a)), snd(a))
+                               |- (this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. this.id .+ ~~"(" + ~~")" .+ ~~";" --> fun a -> Calf (Id(fst(a)))
 
         //Regra do print
-        member this.printRule = ~~"print" + this.whitespace.oneOrMore.opt + ~~"(" +. this.value .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ ~~";" --> Print
+        member this.printRule = ~~"print" + this.whitespace.oneOrMore.opt + ~~"(" +. this.whitespace.oneOrMore.opt +. this.value .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ ~~";" --> Print
 
         //Declaração de módulos e execução de função à posteriori
         //member this.execRule = this.moduleRule + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.callRule
