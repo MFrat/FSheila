@@ -95,7 +95,7 @@ type ESMC() =
             | Abs (y,z) -> E.Add(string x, Abs(y,z))
             | Absf (z) -> E.Add(string x, Absf(z))
     
-    member private this.findFunPrc (id : Tipao) (actuals : Tipao) = 
+    member private this.FunPrc (id : Tipao) (actuals : Tipao) = 
         match id with
         | Id x -> match E.Item(x) with
         //y=formals;z=blk  
@@ -151,7 +151,7 @@ type ESMC() =
             | If (x,y,z) -> S.Push(z); S.Push(y); C.Push(XIf); C.Push(x)
             | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(XLoop); C.Push(x)
             | Seq (x,y) -> C.Push(y); C.Push(x)
-            //New shit :: já estou de saco cheio dessa matéria :: maude nao é linguagem de gente ass Vítor (e Erick tbm)
+            //p3
             | Sheila (x,y) -> C.Push(y); C.Push(x)
             | Module (x,y) -> C.Push(y); C.Push(x)
             | Blk x -> C.Push(x)
@@ -159,10 +159,12 @@ type ESMC() =
             | Prcf (x,z) -> this.addFunProc x (Absf(z))
             | Fun (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Funf (x,z) -> this.addFunProc x (Absf(z))
+            | Ret x -> ()
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
             | Actuals x -> S.Push(Actuals(x))
             | XCal -> match S.Pop(), S.Pop() with
-                        | Actuals x, Id y -> this.findFunPrc (Id(y)) (Actuals(x))
+                        | Actuals x, Id y -> this.FunPrc (Id(y)) (Actuals(x))
+            | Print x -> printfn "%A" x
             | VarDec x -> ()
             | ConstDec x -> ()
             | Init (x,y) -> ()

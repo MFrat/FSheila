@@ -75,7 +75,7 @@ type Tipao =
          | Funf of Tipao * Tipao //função sem parâmetros
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
-         | Ret of Tipao //Ret indica o valor a ser retornado de uma procedure
+         | Ret of Tipao //Ret indica o valor a ser retornado de uma função
          | Sheila of Tipao * Tipao
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
