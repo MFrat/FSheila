@@ -69,8 +69,8 @@ type Tipao =
          | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
          | ConstDec of string //declaração de constantes a nível de código (mesma ressalva acima).
          | Init of Tipao * Tipao
-         | Module of string * Tipao //talvez saia
-         | Blk of Tipao * Tipao //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
+         | Module of Tipao * Tipao //talvez saia
+         | Blk of Tipao  //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
          | Fun of Tipao * Tipao * Tipao //Tipos p/ funções que retornam valores
          | Funf of Tipao * Tipao //função sem parâmetros
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
@@ -79,6 +79,7 @@ type Tipao =
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
+
          
 
 type PEGParser () = 
@@ -307,12 +308,12 @@ type PEGParser () =
         //Bloco geral pra corpo de procedimento:
         member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
                                  + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
-                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) --> Blk
 
 
         member this.blkFunRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
                                  + this.whitespace.oneOrMore.opt) +. (this.generalFunRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
-                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt))
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) --> Blk
        
 
         
@@ -407,8 +408,8 @@ type PEGParser () =
                moreFunsRule
        
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) --> Blk
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) 
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) 
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) --> Module
 
         member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> fun a -> Blk(snd(a))//Blk (Id (fst(a)), snd(a))
         //mudar retorno de Module cf. foto retirada hoje (27/06/2018) em sala de aula. Reolhar a especificação da BPLC. Module não serve para nada na real, o nome dele inclusive é descartado. DONE
@@ -432,3 +433,14 @@ type PEGParser () =
 
         //Regra do print
         member this.printRule = ~~"print" + this.whitespace.oneOrMore.opt + ~~"(" +. this.value .+ this.whitespace.oneOrMore.opt .+ ~~")" .+ ~~";" --> Print
+
+        //Declaração de módulos e execução de função à posteriori
+        //member this.execRule = this.moduleRule + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.callRule
+
+
+
+
+        
+        
+
+
