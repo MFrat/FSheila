@@ -83,7 +83,7 @@ let main argv =
     //let testModule2 = parse testGrammar.callRule "fact(4);"
 
     //eSMC.fillEnviroment
-    getFromParser testModule3 eSMC
+    getFromParser testModule2 eSMC
     eSMC.aKindOfMagic
     eSMC.print
 

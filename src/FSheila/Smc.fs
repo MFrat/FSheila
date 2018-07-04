@@ -60,7 +60,7 @@ type ESMC() =
         | Boolean x -> Boolean x
         | _ -> failwith "Id not found"
     
-    member this.enviroment (op : Tipao) = 
+    member this.enviromentStuff (op : Tipao) = 
         match op with
         | ConstBlock (x,y) -> S.Push(Enviroment(this.newEnviroment)); match x,y with
             | ConstInit (a,b), y ->
@@ -99,11 +99,25 @@ type ESMC() =
         match id with
         | Id x -> match E.Item(x) with
         //y=formals;z=blk  
-            | Abs (y,z) -> this.matchFormals y actuals
-            | Absf z -> ()
+            | Abs (y,z) -> this.matchFormals y actuals; C.Push(z)
+            | Absf z -> S.Push(Enviroment(this.newEnviroment)); C.Push(z)
     
     member private this.matchFormals (formals : Tipao) (actuals : Tipao) =
-        ()
+        // falta fazer para o caso de multiplos parametros
+        S.Push(Enviroment(this.newEnviroment))
+        // for a,f in List.zip formals actuals do
+        // se for constante
+        match formals, actuals with
+            | Formals f, Actuals a -> match a with
+                | Id a -> E.Add(string(f), this.findIdValue(a))
+                | Number a -> E.Add(string(f), Number(a))
+                | Boolean a -> E.Add(string(f), Boolean(a))
+        // se for variável
+        // match formals, actuals with
+        //    | Formals f, Actuals a -> match a with
+        //        | Id a -> E.Add(string(f), this.setOnMemory(Id(a)))
+        //        | Number a -> E.Add(string(f), this.setOnMemory(Number(a)))
+        //        | Boolean a -> E.Add(string(f), this.setOnMemory(Boolean(a)))
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -115,6 +129,8 @@ type ESMC() =
             | Boolean x -> S.Push(Boolean(x))
             | Id x -> match E.Item(string x) with 
                 | Location y -> S.Push(M.Item(Location y))
+                | Abs (y,z) -> S.Push(Id(x))
+                | Absf y -> S.Push(Id(x))
                 | _ -> S.Push(E.Item(string x))
             //Operations
             | Add (x,y) -> C.Push(XAdd); C.Push(y); C.Push(x)
@@ -136,7 +152,7 @@ type ESMC() =
             | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(XLoop); C.Push(x)
             | Seq (x,y) -> C.Push(y); C.Push(x)
             //New shit :: já estou de saco cheio dessa matéria :: maude nao é linguagem de gente ass Vítor (e Erick tbm)
-            //| Sheila (x,y) -> C.Push(y); C.Push(x)
+            | Sheila (x,y) -> C.Push(y); C.Push(x)
             | Module (x,y) -> C.Push(y); C.Push(x)
             | Blk x -> C.Push(x)
             | Prc (x,y,z) -> this.addFunProc x (Abs(y,z))
@@ -197,7 +213,7 @@ type ESMC() =
                         | Boolean x, y, z -> match x with
                             | true -> C.Push(Loop(y,z)); C.Push(z)
                             | false -> ()
-            | _ -> this.enviroment op
+            | _ -> this.enviromentStuff op
             ; this.aKindOfMagic
 
 let stackator (impBplc : Tipao) (eSMC : ESMC) =
@@ -205,5 +221,5 @@ let stackator (impBplc : Tipao) (eSMC : ESMC) =
 
 let getFromParser (program) (eSMC : ESMC) =
     match program with
-    | Success r -> printfn "Input = %A" r.value; stackator r.value eSMC
+    | Success r -> printfn "Input = %A\n-----" r.value; stackator r.value eSMC
     | Failure f -> printfn "Parsing falhou! %A" f.index //failwith "Parsing falhou!"
