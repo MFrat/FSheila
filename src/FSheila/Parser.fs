@@ -79,7 +79,8 @@ type Tipao =
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
-
+         | XCal
+         | XCalf
          
 
 type PEGParser () = 

@@ -89,11 +89,21 @@ type ESMC() =
             | _ -> printfn "(DummyUserError) You shall not assign a const"; failwith ""
         | _ -> printfn "(DummyUserError) You shall declare yours variables"; failwith ""
    
-    member private this.addProc (id : Tipao) (abs : Tipao) = 
+    member private this.addFunProc (id : Tipao) (abs : Tipao) = 
         match id with
         | Id x -> match abs with
             | Abs (y,z) -> E.Add(string x, Abs(y,z))
             | Absf (z) -> E.Add(string x, Absf(z))
+    
+    member private this.findFunPrc (id : Tipao) (actuals : Tipao) = 
+        match id with
+        | Id x -> match E.Item(x) with
+        //y=formals;z=blk  
+            | Abs (y,z) -> this.matchFormals y actuals
+            | Absf z -> ()
+    
+    member private this.matchFormals (formals : Tipao) (actuals : Tipao) =
+        ()
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -126,9 +136,17 @@ type ESMC() =
             | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(XLoop); C.Push(x)
             | Seq (x,y) -> C.Push(y); C.Push(x)
             //New shit :: já estou de saco cheio dessa matéria :: maude nao é linguagem de gente ass Vítor (e Erick tbm)
+            //| Sheila (x,y) -> C.Push(y); C.Push(x)
             | Module (x,y) -> C.Push(y); C.Push(x)
-            | Prc (x,y,z) -> this.addProc x (Abs(y,z))
-            | Prcf (x,z) -> this.addProc x (Absf(z))
+            | Blk x -> C.Push(x)
+            | Prc (x,y,z) -> this.addFunProc x (Abs(y,z))
+            | Prcf (x,z) -> this.addFunProc x (Absf(z))
+            | Fun (x,y,z) -> this.addFunProc x (Abs(y,z))
+            | Funf (x,z) -> this.addFunProc x (Absf(z))
+            | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
+            | Actuals x -> S.Push(Actuals(x))
+            | XCal -> match S.Pop(), S.Pop() with
+                        | Actuals x, Id y -> this.findFunPrc (Id(y)) (Actuals(x))
             | VarDec x -> ()
             | ConstDec x -> ()
             | Init (x,y) -> ()

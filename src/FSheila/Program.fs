@@ -81,7 +81,7 @@ let main argv =
     
 
     //eSMC.fillEnviroment
-    getFromParser testModule2 eSMC
+    getFromParser testModule3 eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
