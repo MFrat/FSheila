@@ -48,10 +48,31 @@ let main argv =
                                                        }
                                                        }
                                                        end"
+
     let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
                                                     var y
                                                     init y = 4
-                                                    proc fact(x) {
+                                                    fun fact(x) {
+                                                    var y = 5, x = 4;
+                                                      while ~(x == 0) {
+                                                          y := y * x; 
+                                                          x := x - 1; 
+                                                        }
+                                                        return x;
+                                                    }
+                                                    proc xhub(x) {
+                                                    var y = 5, x = 4;
+                                                      while ~(x == 0) {
+                                                          y := y * x; 
+                                                          xhub(x); 
+                                                        }
+                                                    }
+                                                    end  fact(4);"
+
+    let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
+                                                    var y
+                                                    init y = 4
+                                                    proc fact(x,y,z) {
                                                     var y = 5, x = 4;
                                                       while ~(x == 0) {
                                                           y := y * x; 
@@ -59,25 +80,14 @@ let main argv =
                                                         } 
                                                     }
                                                     end  fact(4);"
-    let testModule3 = parse testGrammar.moduleRule "module Fact-Rec
-                                                    var y
-                                                    init y = 4
-                                                    proc fact(x) {
-                                                    var y = 5, x = 4;
-                                                      while ~(x == 0) {
-                                                          y := y * x;
-                                                          print(y);
-                                                          fact(x);            
-                                                        } 
-                                                    }
-                                                    proc pornhub(x) {
-                                                    var y = 5, x = 4;
-                                                      while ~(x == 0) {
-                                                          y := y * x; 
-                                                          x := x - 1; 
-                                                        }
-                                                    }
-                                                    end"
+    let retTest = parse testGrammar.sheilaRule "module asdas
+                                                var y
+                                                init y = 4
+                                                fun videos(x) {
+                                                    var y = 3;
+                                                    return y;
+                                                } 
+                                                end videos(4);"
     
 
     //let testModule2 = parse testGrammar.callRule "fact(4);"
@@ -87,7 +97,6 @@ let main argv =
     eSMC.aKindOfMagic
     eSMC.print
 
-    
     let sheila = Console.ReadLine()
     printfn "%A" sheila
     0

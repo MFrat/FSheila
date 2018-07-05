@@ -305,7 +305,8 @@ type PEGParser () =
                                   //validSeq são sequências "validas". isso acima aparentemente funciona
         member this.generalRule =  this.decRule |- this.validSeq
 
-        member this.generalFunRule = (this.decRule |- this.validSeq) + this.retRule --> Seq //corpo de uma função necessita ser encerrado por um "return statement".
+        member this.generalFunRule = this.retRule
+                                     |- (this.decRule |- this.validSeq) + this.retRule --> Seq //corpo de uma função necessita ser encerrado por um "return statement".
 
         //Bloco geral pra corpo de procedimento:
         member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
@@ -384,7 +385,7 @@ type PEGParser () =
 
 
         //Regras para o parsing de funções que retornam valores
-        member this.retRule = ~~"return" +. this.value --> Ret //parei fazendo parser ret TODO
+        member this.retRule = ~~"return" + this.whitespace.oneOrMore.opt +. this.value .+ ~~";"--> Ret //parei fazendo parser ret TODO
 
         member this.funRule = ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkFunRule  --> fun a -> Fun (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
                                |- ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkFunRule --> fun a ->  Funf( Id (fst(fst(a))), snd(a))
@@ -398,10 +399,10 @@ type PEGParser () =
                moreFunsRule
 
 
-        member this.moreFunsRule2 = 
+        member this.procFunRule = 
                let moreFunsRule = production "moreFunsRule"
                let moreProcs = this.procRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreFunsRule --> fun a -> Seq(fst(fst(a)),snd(a))
-               let moreFuns = this.procRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreFunsRule --> fun a -> Seq(fst(fst(a)),snd(a))
+               let moreFuns = this.funRule .+ this.whitespace.oneOrMore.opt .+ this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + moreFunsRule --> fun a -> Seq(fst(fst(a)),snd(a))
                moreFunsRule.rule
                     <- moreFuns
                     |- moreProcs
@@ -410,7 +411,7 @@ type PEGParser () =
                moreFunsRule
        
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) 
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.procFunRule) 
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) --> Dec
 
         member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> Exec
