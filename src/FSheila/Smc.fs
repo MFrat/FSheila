@@ -152,8 +152,8 @@ type ESMC() =
             | Loop (x,y) -> S.Push(y); S.Push(x); C.Push(XLoop); C.Push(x)
             | Seq (x,y) -> C.Push(y); C.Push(x)
             //p3
-            | Sheila (x,y) -> C.Push(y); C.Push(x)
-            | Module (x,y) -> C.Push(y); C.Push(x)
+            | Blkf (x,y) -> C.Push(y); C.Push(x)
+            | Dec (x,y) -> C.Push(y); C.Push(x)
             | Blk x -> C.Push(x)
             | Prc (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Prcf (x,z) -> this.addFunProc x (Absf(z))

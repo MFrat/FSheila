@@ -69,14 +69,14 @@ type Tipao =
          | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
          | ConstDec of string //declaração de constantes a nível de código (mesma ressalva acima).
          | Init of Tipao * Tipao
-         | Module of Tipao * Tipao //talvez saia
+         | Dec of Tipao * Tipao //talvez saia
          | Blk of Tipao  //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
          | Fun of Tipao * Tipao * Tipao //Tipos p/ funções que retornam valores
          | Funf of Tipao * Tipao //função sem parâmetros
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
          | Ret of Tipao //Ret indica o valor a ser retornado de uma função
-         | Sheila of Tipao * Tipao
+         | Blkf of Tipao * Tipao
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
@@ -411,7 +411,7 @@ type PEGParser () =
        
         member this.moduleBlkRule = (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) +. (((this.varDecModuleRule |- this.constDecModuleRule) .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + this.initRule .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) ) --> Seq)
                                     .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) + (this.moreProcsRule) 
-                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) --> Module
+                                    .+ (this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt) --> Dec
 
         member this.moduleRule = ~~"module" +  this.whitespace.oneOrMore.opt +. this.id +. this.moduleBlkRule .+ ~~"end" //--> Exec
 
@@ -424,7 +424,7 @@ type PEGParser () =
                   <-  seq |- this.callRule 
                execCallRule
         
-        member this.sheilaRule = this.moduleRule + this.execCallRule --> Sheila
+        member this.sheilaRule = this.moduleRule + this.execCallRule --> Blkf
 
         //regra para parsing de chamadas de funções/procedimentos
         //Actuals são parâmetros efetivamente passados para a função. Eles tem que bater *exatamente* com os parâmetros formais declarados no procedimento/função.
