@@ -83,7 +83,7 @@ type Tipao =
          | XCal
          | XCalf
          | XBlk
-         
+         | Empty
 
 type PEGParser () = 
         //vale a pena lembrar que os operadores --> vão sair; a semântica das operãções vão vir da BPLC

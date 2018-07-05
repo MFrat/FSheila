@@ -69,17 +69,21 @@ let main argv =
                                                     }
                                                     end  fact(4);"
 
-    let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
+    let main_proc_fact = parse testGrammar.sheilaRule "module Fact-Rec
                                                     var y
-                                                    init y = 4
-                                                    proc fact(x,y,z) {
-                                                    var y = 5, x = 4;
+                                                    init y = true
+                                                    proc fact(x) {
+                                                    var y = 1;
                                                       while ~(x == 0) {
                                                           y := y * x; 
                                                           x := x - 1; 
                                                         } 
                                                     }
-                                                    end  fact(4);"
+                                                    proc main() {
+                                                    var k = 3;
+                                                    fact(k);
+                                                    }
+                                                    end  main();"
     let retTest = parse testGrammar.sheilaRule "module asdas
                                                 var y
                                                 init y = 4
@@ -90,13 +94,13 @@ let main argv =
                                                           x := x - 1; 
                                                         }
                                                         return y;
-                                                } end videos(4);"
+                                                } end videos(3);"
     
 
     //let testModule2 = parse testGrammar.callRule "fact(4);"
 
     //eSMC.fillEnviroment
-    getFromParser retTest eSMC
+    getFromParser main_proc_fact eSMC
     eSMC.aKindOfMagic
     eSMC.print
 

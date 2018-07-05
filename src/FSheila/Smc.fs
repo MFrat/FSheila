@@ -162,9 +162,12 @@ type ESMC() =
             | Ret x -> match x with
                 | Id x -> S.Push(this.findIdValue(x))
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
+            | Calf x -> C.Push(XCalf); C.Push(x)
             | Act x -> S.Push(Act(x))
             | XCal -> match S.Pop(), S.Pop() with
                         | Act x, Id y -> this.FunPrc (Id(y)) (Act(x))
+            | XCalf -> match S.Pop() with
+                        | Id x -> this.FunPrc (Id(x)) Empty
             | XBlk -> match S.Pop() with
                         | Enviroment x -> E <- x; this.garbageCollector
             | Print x -> printfn "Sheila says: %A" x
