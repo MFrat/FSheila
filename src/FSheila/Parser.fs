@@ -69,19 +69,20 @@ type Tipao =
          | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
          | ConstDec of string //declaração de constantes a nível de código (mesma ressalva acima).
          | Init of Tipao * Tipao
-         | Dec of Tipao * Tipao //talvez saia
+         | Dec of Tipao * Tipao //talvez saia MODULE
          | Blk of Tipao  //To usando esse bloco pra bloco de coisas que podem estar dentro de um módulo
          | Fun of Tipao * Tipao * Tipao //Tipos p/ funções que retornam valores
          | Funf of Tipao * Tipao //função sem parâmetros
          | Cal of Tipao * Tipao //Chamada de procedimentos e funçõe com parâmetros
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
          | Ret of Tipao //Ret indica o valor a ser retornado de uma função
-         | Blkf of Tipao * Tipao
+         | Blkf of Tipao * Tipao //SHEILA ROOT
          //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
          | XCal
          | XCalf
+         | XBlk
          
 
 type PEGParser () = 

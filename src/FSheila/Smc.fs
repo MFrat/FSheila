@@ -105,7 +105,7 @@ type ESMC() =
     member private this.matchFormals (formals : Tipao) (actuals : Tipao) =
         // falta fazer para o caso de multiplos parametros
         S.Push(Enviroment(this.newEnviroment))
-        // for a,f in List.zip formals actuals do
+        // for f,a in List.zip formals actuals do
         // se for constante
         // match formals, actuals with
         //    | For f, Act a -> match a with
@@ -114,10 +114,10 @@ type ESMC() =
         //        | Boolean a -> E.Add(string(f), Boolean(a))
         // se for variável
         match formals, actuals with
-           | For f, Act a -> match a with
-               | Id a -> E.Add(string f, this.setOnMemory(Id(a)))
-               | Number a -> E.Add(string f, this.setOnMemory(Number(a)))
-               | Boolean a -> E.Add(string f, this.setOnMemory(Boolean(a)))
+           | For f, Act a -> match f, a with
+               | Id f, Id a -> E.Add(string f, this.setOnMemory(Id(a)))
+               | Id f, Number a -> E.Add(string f, this.setOnMemory(Number(a)))
+               | Id f, Boolean a -> E.Add(string f, this.setOnMemory(Boolean(a)))
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -154,16 +154,19 @@ type ESMC() =
             //p3
             | Blkf (x,y) -> C.Push(y); C.Push(x)
             | Dec (x,y) -> C.Push(y); C.Push(x)
-            | Blk x -> C.Push(x)
+            | Blk x -> C.Push(XBlk); C.Push(x)
             | Prc (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Prcf (x,z) -> this.addFunProc x (Absf(z))
             | Fun (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Funf (x,z) -> this.addFunProc x (Absf(z))
-            | Ret x -> ()
+            | Ret x -> match x with
+                | Id x -> S.Push(this.findIdValue(x))
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
             | Act x -> S.Push(Act(x))
             | XCal -> match S.Pop(), S.Pop() with
                         | Act x, Id y -> this.FunPrc (Id(y)) (Act(x))
+            | XBlk -> match S.Pop() with
+                        | Enviroment x -> E <- x; this.garbageCollector
             | Print x -> printfn "Sheila says: %A" x
             | VarDec x -> ()
             | ConstDec x -> ()
@@ -171,32 +174,120 @@ type ESMC() =
             //Actions
             | XAdd -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Number(x + y)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Number(x + y)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Number(x + y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Number(x + y)))
             | XSubtract -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Number(y - x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Number(y - x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Number(y - x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Number(y - x)))
             | XMultiply -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Number(x * y)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Number(x * y)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Number(x * y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Number(x * y)))
             | XDivide -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Number(y / x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Number(y / x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Number(y / x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Number(y / x)))
             | XAnd -> match S.Pop(), S.Pop() with
                         | Boolean x, Boolean y -> (S.Push(Boolean(x && y)))
+                        | Id x, Boolean y -> match this.findIdValue(x) with
+                            | Boolean x -> (S.Push(Boolean(x && y)))
+                        | Boolean x, Id y -> match this.findIdValue(y) with
+                            | Boolean y -> (S.Push(Boolean(x && y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x && y)))
             | XOr -> match S.Pop(), S.Pop() with
                         | Boolean x, Boolean y -> (S.Push(Boolean(x || y)))
+                        | Id x, Boolean y -> match this.findIdValue(x) with
+                            | Boolean x -> (S.Push(Boolean(x || y)))
+                        | Boolean x, Id y -> match this.findIdValue(y) with
+                            | Boolean y -> (S.Push(Boolean(x || y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x || y)))
             | XNeg -> match S.Pop() with
                         | Boolean x -> (S.Push(Boolean(not(x))))
+                        | Id x -> match this.findIdValue(x) with
+                            | Boolean x -> (S.Push(Boolean(not(x))))
             | XEq -> match S.Pop(), S.Pop() with
                         | Boolean x, Boolean y -> (S.Push(Boolean(x = y)))
-                        | Number x, Number y -> (S.Push(Boolean(x = y)))             
+                        | Number x, Number y -> (S.Push(Boolean(x = y)))
+                        | Id x, Boolean y -> match this.findIdValue(x) with
+                            | Boolean x -> (S.Push(Boolean(x = y)))
+                        | Boolean x, Id y -> match this.findIdValue(y) with
+                            | Boolean y -> (S.Push(Boolean(x = y)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(x = y)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(x = y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x = y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x = y)))
+                            | Number x, Number y -> (S.Push(Boolean(x = y)))
             | XNeq -> match S.Pop(), S.Pop() with
                         | Boolean x, Boolean y -> (S.Push(Boolean(x <> y)))
-                        | Number x, Number y -> (S.Push(Boolean(x <> y)))                
+                        | Number x, Number y -> (S.Push(Boolean(x <> y)))
+                        | Id x, Boolean y -> match this.findIdValue(x) with
+                            | Boolean x -> (S.Push(Boolean(x <> y)))
+                        | Boolean x, Id y -> match this.findIdValue(y) with
+                            | Boolean y -> (S.Push(Boolean(x <> y)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(x <> y)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(x <> y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x <> y)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Boolean x, Boolean y -> (S.Push(Boolean(x <> y)))
+                            | Number x, Number y -> (S.Push(Boolean(x <> y)))
             | XLeb -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Boolean(y < x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(y < x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(y < x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Boolean(y < x)))
             | XLeq -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Boolean(y <= x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(y <= x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(y <= x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Boolean(y <= x)))
             | XGeb -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Boolean(y > x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(y > x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(y > x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Boolean(y > x)))
             | XGeq -> match S.Pop(), S.Pop() with
                         | Number x, Number y -> (S.Push(Boolean(y >= x)))
+                        | Id x, Number y -> match this.findIdValue(x) with
+                            | Number x -> (S.Push(Boolean(y >= x)))
+                        | Number x, Id y -> match this.findIdValue(y) with
+                            | Number y -> (S.Push(Boolean(y >= x)))
+                        | Id x, Id y -> match this.findIdValue(x), this.findIdValue(y) with
+                            | Number x, Number y -> (S.Push(Boolean(y >= x)))
             | XAssign -> match S.Pop(), this.checkVarType(S.Pop()) with 
                             | Number y, Id x -> try (M.Add(E.Item(string x),Number y))
                                                 with

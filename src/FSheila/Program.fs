@@ -72,14 +72,14 @@ let main argv =
     let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
                                                     var y
                                                     init y = 4
-                                                    proc fact(x,y,z) {
-                                                    var y = 5, x = 4;
+                                                    proc fact(x) {
+                                                    var y = 1;
                                                       while ~(x == 0) {
                                                           y := y * x; 
                                                           x := x - 1; 
-                                                        } 
+                                                        }
                                                     }
-                                                    end  fact(4);"
+                                                    end  fact(5);"
     let retTest = parse testGrammar.sheilaRule "module asdas
                                                 var y
                                                 init y = 4
@@ -93,7 +93,7 @@ let main argv =
     //let testModule2 = parse testGrammar.callRule "fact(4);"
 
     //eSMC.fillEnviroment
-    getFromParser testModule2 eSMC
+    getFromParser retTest eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
