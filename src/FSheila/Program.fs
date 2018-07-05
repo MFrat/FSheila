@@ -72,22 +72,25 @@ let main argv =
     let testModule2 = parse testGrammar.sheilaRule "module Fact-Rec
                                                     var y
                                                     init y = 4
-                                                    proc fact(x) {
+                                                    proc fact(x,y,z) {
+                                                    var y = 5, x = 4;
+                                                      while ~(x == 0) {
+                                                          y := y * x; 
+                                                          x := x - 1; 
+                                                        } 
+                                                    }
+                                                    end  fact(4);"
+    let retTest = parse testGrammar.sheilaRule "module asdas
+                                                var y
+                                                init y = 4
+                                                fun videos(x) {
                                                     var y = 1;
                                                       while ~(x == 0) {
                                                           y := y * x; 
                                                           x := x - 1; 
                                                         }
-                                                    }
-                                                    end  fact(5);"
-    let retTest = parse testGrammar.sheilaRule "module asdas
-                                                var y
-                                                init y = 4
-                                                fun videos(x) {
-                                                    var y = 3;
-                                                    return y;
-                                                } 
-                                                end videos(4);"
+                                                        return y;
+                                                } end videos(4);"
     
 
     //let testModule2 = parse testGrammar.callRule "fact(4);"
