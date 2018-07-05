@@ -58,12 +58,12 @@ type Tipao =
          //novos tipos p controle de blocos
          | XVarBlock
          | XConstBlock
-         | XBlock
+         | XBlock 
          | Enviroment of Dictionary<string, Tipao> //para desempilhar
          // (novos tipos para a p3)
          | Print of Tipao
-         | Formals of Tipao //Formals são os parâmetros formais da declaração do proc e de fun.
-         | Actuals of Tipao //Actuals são os parâmetros passados efetivamente para procs e funs.
+         | For of Tipao //Formals são os parâmetros formais da declaração do proc e de fun.
+         | Act of Tipao //Actuals são os parâmetros passados efetivamente para procs e funs.
          | Prc of Tipao * Tipao * Tipao //Id, formals e Block
          | Prcf of Tipao * Tipao //procedimentos sem parâmetros (Id e Block).
          | VarDec of string //Declaração de variáveis a nível de Módulo (ou seria of Tipao?)
@@ -323,7 +323,7 @@ type PEGParser () =
 
         //p3
         //Declaração de parâmetros é vista como declaração de blocos
-        member this.singleFormalRule = this.id --> fun a -> Formals(Id a)
+        member this.singleFormalRule = this.id --> fun a -> For(Id a)
 
         member this.formalsRule = 
                let formalsRule = production "formalsRule"
@@ -428,7 +428,7 @@ type PEGParser () =
 
         //regra para parsing de chamadas de funções/procedimentos
         //Actuals são parâmetros efetivamente passados para a função. Eles tem que bater *exatamente* com os parâmetros formais declarados no procedimento/função.
-        member this.singleActualsRule = this.value --> fun a -> Actuals(a)
+        member this.singleActualsRule = this.value --> fun a -> Act(a)
 
         member this.actualsRule =
                let actualsRule = production "actualsRule"

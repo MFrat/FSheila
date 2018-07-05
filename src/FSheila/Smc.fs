@@ -107,17 +107,17 @@ type ESMC() =
         S.Push(Enviroment(this.newEnviroment))
         // for a,f in List.zip formals actuals do
         // se for constante
-        match formals, actuals with
-            | Formals f, Actuals a -> match a with
-                | Id a -> E.Add(string(f), this.findIdValue(a))
-                | Number a -> E.Add(string(f), Number(a))
-                | Boolean a -> E.Add(string(f), Boolean(a))
-        // se for variável
         // match formals, actuals with
-        //    | Formals f, Actuals a -> match a with
-        //        | Id a -> E.Add(string(f), this.setOnMemory(Id(a)))
-        //        | Number a -> E.Add(string(f), this.setOnMemory(Number(a)))
-        //        | Boolean a -> E.Add(string(f), this.setOnMemory(Boolean(a)))
+        //    | For f, Act a -> match a with
+        //        | Id a -> E.Add(string(f), this.findIdValue(a))
+        //        | Number a -> E.Add(string(f), Number(a))
+        //        | Boolean a -> E.Add(string(f), Boolean(a))
+        // se for variável
+        match formals, actuals with
+           | For f, Act a -> match a with
+               | Id a -> E.Add(string f, this.setOnMemory(Id(a)))
+               | Number a -> E.Add(string f, this.setOnMemory(Number(a)))
+               | Boolean a -> E.Add(string f, this.setOnMemory(Boolean(a)))
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -161,10 +161,10 @@ type ESMC() =
             | Funf (x,z) -> this.addFunProc x (Absf(z))
             | Ret x -> ()
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
-            | Actuals x -> S.Push(Actuals(x))
+            | Act x -> S.Push(Act(x))
             | XCal -> match S.Pop(), S.Pop() with
-                        | Actuals x, Id y -> this.FunPrc (Id(y)) (Actuals(x))
-            | Print x -> printfn "%A" x
+                        | Act x, Id y -> this.FunPrc (Id(y)) (Act(x))
+            | Print x -> printfn "Sheila says: %A" x
             | VarDec x -> ()
             | ConstDec x -> ()
             | Init (x,y) -> ()
