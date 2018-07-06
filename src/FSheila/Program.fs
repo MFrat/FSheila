@@ -88,12 +88,7 @@ let main argv =
                                                 var y
                                                 init y = 4
                                                 fun videos(x) {
-                                                    var y = 1;
-                                                      while ~(x == 0) {
-                                                          y := y * x; 
-                                                          x := x - 1; 
-                                                        }
-                                                        return y;
+                                                    return x;
                                                 } end videos(3);"
     // o teste abaixo está OK.
     //let retTest = parse testGrammar.funRule "fun videos(x) {

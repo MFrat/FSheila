@@ -48,10 +48,13 @@ type ESMC() =
 
     member private this.garbageCollector =
         for entry in Dictionary<Tipao, Tipao>(M) do //faz uma cópia da memória para iterar
-            match entry.Key with
-            | Location l -> match E.ContainsValue(Location l) with
-                | false -> M.Remove(Location l) |> ignore
-                | _ -> ()
+            match entry.Value with
+            //| Abs (x,y) -> ()
+            //| Absf x -> ()
+            | _ -> match entry.Key with
+                | Location l -> match E.ContainsValue(Location l) with
+                    | false -> M.Remove(Location l) |> ignore
+                    | _ -> ()
 
     member private this.findIdValue (id : string) = 
         match E.Item(id) with
@@ -160,7 +163,8 @@ type ESMC() =
             | Fun (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Funf (x,z) -> this.addFunProc x (Absf(z))
             | Ret x -> match x with
-                | Id x -> S.Push(this.findIdValue(x))
+                | Id x -> match S.Pop() with
+                    |Enviroment e -> S.Push(this.findIdValue(x)); S.Push(Enviroment e)
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
             | Calf x -> C.Push(XCalf); C.Push(x)
             | Act x -> S.Push(Act(x))
