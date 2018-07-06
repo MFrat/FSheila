@@ -2,7 +2,6 @@
 
 open ScanRat
 open FSheila
-open Utils
 open Parser
 open System.Collections.Generic
 
@@ -11,10 +10,6 @@ type ESMC() =
     let mutable S = new Stack<Tipao>()
     let mutable M = new Dictionary<Tipao, Tipao>() //ACORDO DE CAVALHEIROS: O PRIMEIRO Tipao TEM QUE SER UM LOCATION
     let mutable C = new Stack<Tipao>()
-
-    member this.fillEnviroment = 
-        E.Add("teste", Location(int 10))
-        M.Add(Location(int 10), Number(bigint 1))
 
     member this.fillController (bplc : Tipao) = 
         C.Push(bplc)
@@ -48,10 +43,7 @@ type ESMC() =
 
     member private this.garbageCollector =
         for entry in Dictionary<Tipao, Tipao>(M) do //faz uma cópia da memória para iterar
-            match entry.Value with
-            //| Abs (x,y) -> ()
-            //| Absf x -> ()
-            | _ -> match entry.Key with
+            match entry.Key with
                 | Location l -> match E.ContainsValue(Location l) with
                     | false -> M.Remove(Location l) |> ignore
                     | _ -> ()
@@ -81,7 +73,7 @@ type ESMC() =
                 | Number b -> E.Add(string(a), this.setOnMemory(Number(b)))
                 | Boolean b -> E.Add(string(a), this.setOnMemory(Boolean(b)))
             ; C.Push(XVarBlock); C.Push(y)
-        | XVarBlock -> match S.Pop() with //ALEM DISSO PRECISA LIMPAR A MEMORIA
+        | XVarBlock -> match S.Pop() with
             | Enviroment x -> E <- x; this.garbageCollector
         | _ -> failwith "Deu ruim"
     
@@ -106,9 +98,7 @@ type ESMC() =
             | Absf z -> S.Push(Enviroment(this.newEnviroment)); C.Push(z)
     
     member private this.matchFormals (formals : Tipao) (actuals : Tipao) =
-        // falta fazer para o caso de multiplos parametros
         S.Push(Enviroment(this.newEnviroment))
-        // for f,a in List.zip formals actuals do
         // se for constante
         // match formals, actuals with
         //    | For f, Act a -> match a with
@@ -121,6 +111,15 @@ type ESMC() =
                | Id f, Id a -> E.Add(string f, this.setOnMemory(Id(a)))
                | Id f, Number a -> E.Add(string f, this.setOnMemory(Number(a)))
                | Id f, Boolean a -> E.Add(string f, this.setOnMemory(Boolean(a)))
+
+    member private this.pushReturn (retData : Tipao) =
+        let mutable tmp = new Stack<Tipao>()
+        while S.Count <> 0 do
+            tmp.Push(S.Pop())
+        match retData with
+            | Id x ->  S.Push(this.findIdValue(x))
+        while tmp.Count <> 0 do
+            S.Push(tmp.Pop())
 
     member this.aKindOfMagic =
         if C.Count <> 0 then  
@@ -162,9 +161,7 @@ type ESMC() =
             | Prcf (x,z) -> this.addFunProc x (Absf(z))
             | Fun (x,y,z) -> this.addFunProc x (Abs(y,z))
             | Funf (x,z) -> this.addFunProc x (Absf(z))
-            | Ret x -> match x with
-                | Id x -> match S.Pop() with
-                    |Enviroment e -> S.Push(this.findIdValue(x)); S.Push(Enviroment e)
+            | Ret x -> this.pushReturn x
             | Cal (x,y) -> C.Push(XCal); C.Push(y); C.Push(x)
             | Calf x -> C.Push(XCalf); C.Push(x)
             | Act x -> S.Push(Act(x))

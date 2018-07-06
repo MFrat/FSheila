@@ -77,7 +77,6 @@ type Tipao =
          | Calf of Tipao //Chamada de procedimentos e funções sem parâmetros
          | Ret of Tipao //Ret indica o valor a ser retornado de uma função
          | Blkf of Tipao * Tipao //SHEILA ROOT
-         //minhas bosta ai
          | Abs of Tipao * Tipao //formals and block
          | Absf of Tipao //block
          | XCal
