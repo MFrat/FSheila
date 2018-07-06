@@ -196,6 +196,7 @@ type PEGParser () =
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
                seqVarRule.rule
                   <-  seq
+                      |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> VarBlock
                       |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validSeq --> VarBlock
                seqVarRule
 
@@ -213,6 +214,7 @@ type PEGParser () =
                          ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqConstRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> ConstBlock (a,b)
                seqConstRule.rule
                   <- seq 
+                  |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> ConstBlock
                   |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validSeq --> ConstBlock
                   |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.realSeqVarRule --> ConstBlock
                  
@@ -224,20 +226,6 @@ type PEGParser () =
 
         member this.decRule = this.realSeqVarRule |- this.realSeqConstRule
 
-
-        //member this.initRule = 
-        //     let boole = this.boolOp //--> Boolexp
-        //     let numExp = this.calcOp //|- boole
-        //     let initRule = production "initRule"
-        //     let oneAssignExp = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init
-        //     let oneAssignBoolex = ~~"init" +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+ ~~"=" + (this.whitespace.oneOrMore +. (boole) .+ this.whitespace.oneOrMore.opt) --> Init
-        //     //NOTA: para o uso de múltiplos assigns é necessário ter um espaço como definido no this.whitespace.oneOrMore (vide documentação de IMP).
-        //     let moreAssigns = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +. (numExp) .+ this.whitespace.oneOrMore.opt) --> Init //.+ ~~","+. (this.whitespace.oneOrMore.opt +. this.id .+ this.whitespace.oneOrMore.opt)
-        //     let moreAssignsBool = (this.whitespace.oneOrMore) + ~~"," +. (this.whitespace.oneOrMore +. this.id .+ this.whitespace.oneOrMore.opt) .+  ~~"=" + (this.whitespace.oneOrMore +.  (boole) .+ this.whitespace.oneOrMore.opt) --> Init
-        //     initRule.rule //tem que ver isso aqui
-        //        //o init não precisa ser levado como dado importante para o processo de semântica pela definição da regra acima (note que o mesmo ocorre com "var" e "const").
-        //        <- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt) |- (oneAssignExp + (moreAssignsBool |- moreAssigns).opt)
-        //     initRule
          
 
         //regra do assign
@@ -306,8 +294,21 @@ type PEGParser () =
                                   //validSeq são sequências "validas". isso acima aparentemente funciona
         member this.generalRule =  this.decRule |- this.validSeq
 
-        member this.generalFunRule = this.retRule
-                                     |- (this.decRule |- this.validSeq) + this.retRule --> Seq //corpo de uma função necessita ser encerrado por um "return statement".
+        //comandos para funções
+        member this.validFunSeq =    this.loopRule + this.retRule --> Seq
+                                  |- this.seqRule .+ this.commaDot + this.ifRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
+                                  |- this.seqRule .+ this.commaDot + this.loopRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
+                                  |- this.seqRule .+ this.commaDot + this.ifRule --> Seq
+                                  |- this.seqRule .+ this.commaDot + this.loopRule --> Seq
+                                  |- this.ifRule
+                                  |- this.retRule
+                                  |- this.loopRule
+                                  |- this.seqRule
+                                  //validSeq são sequências "validas". isso acima aparentemente funciona
+        member this.generalFunRule =  this.decRule |- this.validFunSeq
+
+        //member this.generalFunRule = this.retRule
+        //                             |- (this.decRule |- this.validSeq) + this.retRule --> Seq //corpo de uma função necessita ser encerrado por um "return statement".
 
         //Bloco geral pra corpo de procedimento:
         member this.blkRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
@@ -386,7 +387,7 @@ type PEGParser () =
 
 
         //Regras para o parsing de funções que retornam valores
-        member this.retRule = ~~"return" + this.whitespace.oneOrMore.opt +. this.value .+ ~~";"--> Ret //parei fazendo parser ret TODO
+        member this.retRule = this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"return" +. this.whitespace.oneOrMore.opt +. this.value .+ ~~";"--> Ret
 
         member this.funRule = ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + this.formalsRule + ~~")" + this.blkFunRule  --> fun a -> Fun (Id(fst(fst(fst(a)))),(snd(fst(fst(a)))), snd(a))
                                |- ~~"fun" + this.whitespace.oneOrMore.opt +. this.id .+ ~~"(" + ~~")" + this.blkFunRule --> fun a ->  Funf( Id (fst(fst(a))), snd(a))

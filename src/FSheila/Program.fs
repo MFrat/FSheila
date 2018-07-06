@@ -95,12 +95,19 @@ let main argv =
                                                         }
                                                         return y;
                                                 } end videos(3);"
-    
+    // o teste abaixo está OK.
+    //let retTest = parse testGrammar.funRule "fun videos(x) {
+    //                                                var y = 1;
+    //                                                  while ~(x == 0) {
+    //                                                      y := y * x; 
+    //                                                      x := x - 1; 
+    //                                                    }
+    //                                                    return y; }"
 
     //let testModule2 = parse testGrammar.callRule "fact(4);"
 
     //eSMC.fillEnviroment
-    getFromParser main_proc_fact eSMC
+    getFromParser retTest eSMC
     eSMC.aKindOfMagic
     eSMC.print
 
