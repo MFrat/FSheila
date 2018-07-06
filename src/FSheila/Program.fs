@@ -90,6 +90,24 @@ let main argv =
                                                 fun videos(x) {
                                                     return x;
                                                 } end videos(3);"
+                                            
+    let retTest = parse testGrammar.sheilaRule "module fact-rec
+                                                var y
+                                                init y = true
+                                                fun fact(x) {
+                                                  var y = 1;
+                                                  while ~(x==0) {
+                                                  y := y * x;
+                                                  x := x - 1;
+                                                  }
+                                                     return y;
+                                                }
+                                                proc main() {
+                                                  var k = 3;
+                                                  fact(k);
+                                                  }
+                                                end main();"
+                                               
     // o teste abaixo está OK.
     //let retTest = parse testGrammar.funRule "fun videos(x) {
     //                                                var y = 1;

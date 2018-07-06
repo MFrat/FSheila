@@ -253,7 +253,7 @@ type PEGParser () =
                let seq = ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt) +. (this.assignRule |- this.printRule |- this.callRule) .+ this.whitespace.oneOrMore.opt) 
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +.  (seqRule) .+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> Seq (a,b)
                seqRule.rule
-                  <-  seq |- this.assignRule |- this.printRule |- this.callRule 
+                  <-  seq |- this.assignRule |- this.printRule |- this.callRule  |- this.retRule
                seqRule
 
         member this.seqFunRule =
@@ -283,7 +283,7 @@ type PEGParser () =
         member this.commaDot = this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt  + this.whitespace.oneOrMore.opt .+  //~~";" .+
                                   this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt+ this.whitespace.oneOrMore.opt + this.whitespace.oneOrMore.opt
 
-        member this.validSeq =    this.loopRule
+        member this.validSeq =    this.loopRule + this.retRule --> Seq  
                                   |- this.seqRule .+ this.commaDot + this.ifRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
                                   |- this.seqRule .+ this.commaDot + this.loopRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
                                   |- this.seqRule .+ this.commaDot + this.ifRule --> Seq
