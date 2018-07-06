@@ -196,7 +196,7 @@ type PEGParser () =
                          + ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqVarRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> VarBlock (a,b)
                seqVarRule.rule
                   <-  seq
-                      |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> VarBlock
+                      //|- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> VarBlock
                       |- this.varRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validSeq --> VarBlock
                seqVarRule
 
@@ -214,7 +214,7 @@ type PEGParser () =
                          ((this.linebreak.oneOrMore.opt +. this.whitespace.oneOrMore.opt |- this.whitespace.oneOrMore.opt)  +. seqConstRule.+ this.whitespace.oneOrMore.opt) --> fun(a,b) -> ConstBlock (a,b)
                seqConstRule.rule
                   <- seq 
-                  |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> ConstBlock
+                  //|- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validFunSeq --> ConstBlock
                   |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.validSeq --> ConstBlock
                   |- this.constRule .+ ~~";" .+ (this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt) + this.realSeqVarRule --> ConstBlock
                  
@@ -288,6 +288,7 @@ type PEGParser () =
                                   |- this.seqRule .+ this.commaDot + this.loopRule + this.seqRule --> fun a -> Seq(fst(fst(a)),Seq(snd(fst(a)),snd(a)))
                                   |- this.seqRule .+ this.commaDot + this.ifRule --> Seq
                                   |- this.seqRule .+ this.commaDot + this.loopRule --> Seq
+                                  |- this.retRule
                                   |- this.ifRule
                                   |- this.loopRule
                                   |- this.seqRule
@@ -317,8 +318,8 @@ type PEGParser () =
 
 
         member this.blkFunRule = (( this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + ~~"{" + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt 
-                                 + this.whitespace.oneOrMore.opt) +. (this.generalFunRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
-                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) --> Blk
+                                 + this.whitespace.oneOrMore.opt) +. (this.generalRule) .+ ( this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + ~~"}" 
+                                 + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt)) --> Blk //generalFunRule
        
 
         
@@ -451,11 +452,3 @@ type PEGParser () =
 
         //Declaração de módulos e execução de função à posteriori
         //member this.execRule = this.moduleRule + this.linebreak.oneOrMore.opt + this.whitespace.oneOrMore.opt + this.linebreak.oneOrMore.opt + this.callRule
-
-
-
-
-        
-        
-
-
